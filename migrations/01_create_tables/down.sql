@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS "Users";
+DROP TABLE IF EXISTS "Roles";
+DROP TABLE IF EXISTS "Subjects";
+DROP TABLE IF EXISTS "User_Subjects";
+DROP TABLE IF EXISTS "Assigments";
+DROP TABLE IF EXISTS "Solution";
+DROP TABLE IF EXISTS "User_Solution_Assignments";
+DROP TABLE IF EXISTS "Microsoft_Logins";
+DROP TABLE IF EXISTS "Session_Refresh_Keys";
