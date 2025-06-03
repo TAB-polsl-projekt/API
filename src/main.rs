@@ -1,8 +1,24 @@
+use db::DbConn;
 use rocket::{catch, catchers, http::Method, launch, options, response::status, Request};
 use rocket_cors::{AllowedOrigins, CorsOptions};
-use rocket_okapi::{mount_endpoints_and_merged_docs, swagger_ui::{make_swagger_ui, SwaggerUIConfig}};
-
 mod api;
+
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+
+use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, Pool};
+use dotenv::dotenv;
+use rocket_okapi::mount_endpoints_and_merged_docs;
+use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
+use std::env;
+
+pub mod dbschema;
+pub mod dbmodels;
+pub mod db;
+pub type DbPool = Pool<ConnectionManager<SqliteConnection>>;
 
 #[catch(404)]
 fn not_found(req: &Request) -> status::NotFound<String> {
@@ -12,6 +28,16 @@ fn not_found(req: &Request) -> status::NotFound<String> {
 
 #[options("/<_..>")]
 fn options_preflight() {}
+
+fn establish_connection() -> DbPool {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+    Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.")
+}
 
 
 #[launch]
@@ -29,6 +55,7 @@ async fn rocket() -> _ {
     .expect("CORS configuration failed");
 
     let mut rocket_builder = rocket::build()
+    .attach(DbConn::fairing())
         .attach(cors)
         .mount("/swagger-ui/", make_swagger_ui(&SwaggerUIConfig {
             url: "../api/openapi.json".to_owned(),
@@ -36,7 +63,7 @@ async fn rocket() -> _ {
         }))
         .register("/", catchers![not_found]);
 
-        let openapi_settings = rocket_okapi::settings::OpenApiSettings::default();
+    let openapi_settings = rocket_okapi::settings::OpenApiSettings::default();
         mount_endpoints_and_merged_docs! {
             rocket_builder, "/api".to_owned(), openapi_settings,
             "/" => api::get_routes_and_docs(&openapi_settings)

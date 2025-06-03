@@ -1,2 +1,4 @@
 [global]
 address = "0.0.0.0"
+[default.databases]
+sqlite_db = { url = "db.sqlite" }

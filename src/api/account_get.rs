@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 use diesel::prelude::*;
 
-use crate::dbschema::solution;
+use crate::dbmodels::User;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -19,14 +19,11 @@ pub enum Error {
     
 }
 
-#[derive(Serialize, Deserialize, Debug, schemars::JsonSchema)]
-pub struct Response {
-    grade: f64,
-}
+pub type Response = User;
 
-#[openapi(tag = "Assignments")]
-#[get("/assignments/<assignment_id>/solution")]
-pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+#[openapi(tag = "Account")]
+#[get("/account")]
+pub async fn endpoint(conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<Json<Response>, BadRequest<Json<Error>>> {
     let session_id = jar.get("session_id").map(|cookie| cookie.value())
             .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
 
@@ -42,25 +39,18 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &Cook
                 .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
         };
 
-        let (grade, solution_data): (Option<f64>, Option<Vec<u8>>) = {
+        let result: User = {
             let uid = user_id;
-            let aid = assignment_id;
+            use crate::dbschema::users::dsl::*;
 
-            use crate::dbschema::user_solution_assignments::dsl::*;
-
-            solution::table
-                .inner_join(user_solution_assignments.on(solution::solution_id.eq(solution_id)))
+            users
                 .filter(user_id.eq(uid))
-                .filter(assigment_id.eq(aid))
-                .order(solution::submission_date.desc())
-                .select((solution::grade, solution::solution_data))
+                .select(users::all_columns())
                 .first(c)
-                .map_err(|_e| Error::Other("Failed to execute a query".to_string()))?
+                .map_err(|_e| Error::Other("Failed to find the user".to_string()))?
         };
 
-        let grade = grade.unwrap_or(0.0);
-
-        Ok(Json(Response { grade }))
+        Ok(Json(result))
     })
     .await
     .map_err(|e| BadRequest(Json(e)))

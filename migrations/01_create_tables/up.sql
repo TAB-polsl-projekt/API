@@ -1,4 +1,4 @@
-CREATE TABLE Users (
+CREATE TABLE users (
   user_id Text PRIMARY KEY,
   email VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -8,20 +8,20 @@ CREATE TABLE Users (
   last_login_time TIMESTAMP
 );
 
-CREATE TABLE Roles (
+CREATE TABLE roles (
   role_id Text PRIMARY KEY,
   name VARCHAR(255),
   permissions INT
 );
 
-CREATE TABLE Subjects (
+CREATE TABLE subjects (
   subject_id Text PRIMARY KEY,
   subject_name VARCHAR(255),
   editor_role_id Text NOT NULL,
   FOREIGN KEY (editor_role_id) REFERENCES Roles(role_id)
 );
 
-CREATE TABLE User_Subjects (
+CREATE TABLE user_subjects (
   user_id Text,
   subject_id Text,
   role_id Text,
@@ -32,7 +32,7 @@ CREATE TABLE User_Subjects (
   FOREIGN KEY (role_id) REFERENCES Roles(role_id)
 );
 
-CREATE TABLE Assigments (
+CREATE TABLE assigments (
   assigment_id Text PRIMARY KEY,
   subject_id Text NOT NULL,
   title VARCHAR(255),
@@ -40,7 +40,7 @@ CREATE TABLE Assigments (
   FOREIGN KEY (subject_id) REFERENCES Subjects(subject_id)
 );
 
-CREATE TABLE Solution (
+CREATE TABLE solution (
   solution_id Text PRIMARY KEY,
   grade DECIMAL(3,2),
   submission_date TIMESTAMP,
@@ -50,7 +50,7 @@ CREATE TABLE Solution (
   FOREIGN KEY (reviewed_by) REFERENCES Users(user_id)
 );
 
-CREATE TABLE User_Solution_Assignments (
+CREATE TABLE user_solution_assignments (
   user_id Text,
   solution_id Text,
   assigment_id Text,
@@ -60,14 +60,14 @@ CREATE TABLE User_Solution_Assignments (
   FOREIGN KEY (assigment_id) REFERENCES Assigments(assigment_id)
 );
 
-CREATE TABLE Microsoft_Logins (
+CREATE TABLE microsoft_logins (
   microsoft_login_id Text PRIMARY KEY,
   microsoft_id VARCHAR(255),
   user_id Text,
   FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
-CREATE TABLE Session_Refresh_Keys (
+CREATE TABLE session_refresh_keys (
   refresh_key_id Text PRIMARY KEY,
   user_id Text NOT NULL,
   expiration_time TIMESTAMP,

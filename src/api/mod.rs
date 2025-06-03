@@ -1,8 +1,19 @@
 use rocket::Route;
-use rocket_okapi::{okapi::{merge::marge_spec_list, openapi3::OpenApi}, openapi_get_routes_spec, settings::OpenApiSettings};
+use rocket_okapi::{okapi::{merge::marge_spec_list, openapi3::OpenApi}, settings::OpenApiSettings};
 
+pub mod account_get;
+pub mod account_put;
+pub mod assignment_get;
+pub mod assignment_put;
 pub mod assignment_solution_get;
-mod endpoint_response;
+pub mod assignment_solution_post;
+pub mod assignments_post;
+pub mod auth_delete;
+pub mod auth_post;
+pub mod subject_get;
+pub mod subject_put;
+pub mod subjects_get;
+pub mod subjects_post;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) {
     // Start with an empty vector for routes and an initial empty OpenAPI object.
@@ -10,6 +21,8 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     let prefix = "".to_string();
 
     all_routes_and_docs.push(assignment_solution_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(account_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(account_put::get_routes_and_docs(settings));
 
     let (all_routes, all_spec) = all_routes_and_docs.into_iter()
         .fold((Vec::new(), Vec::new()), |(mut routes, mut specs), it| {
