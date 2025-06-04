@@ -27,3 +27,12 @@ pub struct UserUpdate {
     pub user_disabled: Option<bool>,
     pub last_login_time: Option<NaiveDateTime>
 }
+
+#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
+#[diesel(table_name = assignments)]
+pub struct Assignment {
+    pub assignment_id: Option<String>,
+    pub subject_id: String,
+    pub title: Option<String>,
+    pub description: Option<String>
+}
