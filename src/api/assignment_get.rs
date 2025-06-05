@@ -7,7 +7,7 @@ use rocket::response::status::BadRequest;
 use diesel::prelude::*;
 
 use crate::dbmodels::{Assignment, User};
-use crate::dbschema::{assigments, subjects, user_subjects};
+use crate::dbschema::{assigments, subjects, user_solution_assignments, user_subjects};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -20,7 +20,7 @@ pub enum Error {
     
 }
 
-pub type Result = Assignment;
+pub type Response = Assignment;
 
 #[openapi(tag = "Account")]
 #[get("/assignments/<assignment_id>")]
@@ -41,11 +41,9 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &Cook
         };
 
         let assignment: Assignment = {
-            subjects::table
-                .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
-                .inner_join(assigments::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))
-                .filter(user_subjects::user_id.eq(user_id))
-                .filter(subjects::subject_id.eq(subject_id))
+            assigments::table
+                .inner_join(user_solution_assignments::table.on(user_solution_assignments::assigment_id.eq(assigments::assigment_id)))
+                .filter(user_solution_assignments::user_id.eq(user_id))
                 .select(assigments::all_columns)
                 .get_result(c)
                 .map_err(|_e| Error::Other("".to_string()))?
