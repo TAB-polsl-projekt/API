@@ -3,7 +3,7 @@ use diesel::{prelude::{Insertable, Queryable}, AsChangeset};
 use schemars::JsonSchema;
 use serde::{Serialize};
 
-use crate::dbschema::{solution, users};
+use crate::dbschema::{assigments, solution, users};
 
 use serde::{Deserialize, Deserializer};
 
@@ -39,11 +39,18 @@ pub struct UserUpdate {
     pub last_login_time: Option<NaiveDateTime>
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
-#[diesel(table_name = assignments)]
+#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
+#[diesel(table_name = assigments)]
 pub struct Assignment {
-    pub assignment_id: Option<String>,
+    pub assigment_id: Option<String>,
     pub subject_id: String,
+    pub title: Option<String>,
+    pub description: Option<String>
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, AsChangeset)]
+#[diesel(table_name = assigments)]
+pub struct AssignmentUpdate {
     pub title: Option<String>,
     pub description: Option<String>
 }
@@ -61,13 +68,17 @@ pub struct Subject {
 #[diesel(table_name = solution)]
 pub struct Solution {
     pub solution_id: Option<String>,
+    #[serde(skip)]
     pub grade: f64,
     #[serde(deserialize_with = "from_timestamp")]
+    #[serde(skip)]
     pub submission_date: NaiveDateTime,
     #[serde(serialize_with = "serde_bytes::serialize")]
     #[serde(deserialize_with = "serde_bytes::deserialize")]
     pub solution_data: Vec<u8>,
+    #[serde(skip)]
     pub reviewed_by: Option<String>,
     #[serde(deserialize_with = "from_timestamp")]
+    #[serde(skip)]
     pub review_date: NaiveDateTime
 }

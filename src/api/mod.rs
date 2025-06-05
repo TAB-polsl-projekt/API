@@ -8,8 +8,8 @@ pub mod assignment_put;
 pub mod assignment_solution_get;
 pub mod assignment_solution_post;
 pub mod assignments_post;
-pub mod auth_delete;
-pub mod auth_post;
+// pub mod auth_delete;
+// pub mod auth_post;
 pub mod subject_get;
 pub mod subject_put;
 pub mod subjects_get;
@@ -27,6 +27,8 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     all_routes_and_docs.push(subjects_get::get_routes_and_docs(settings));
     all_routes_and_docs.push(assignment_get::get_routes_and_docs(settings));
     all_routes_and_docs.push(assignment_solution_post::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignments_post::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignment_put::get_routes_and_docs(settings));
 
     let (all_routes, all_spec) = all_routes_and_docs.into_iter()
         .fold((Vec::new(), Vec::new()), |(mut routes, mut specs), it| {
