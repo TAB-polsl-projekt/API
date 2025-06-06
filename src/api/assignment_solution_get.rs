@@ -5,8 +5,10 @@ use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 use diesel::prelude::*;
+use crate::dbschema::assigments::dsl::assigments;
 
-use crate::dbschema::solution;
+use crate::dbmodels::Assignment;
+use crate::dbschema::{solution, user_subjects};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -19,13 +21,10 @@ pub enum Error {
     
 }
 
-#[derive(Serialize, Deserialize, Debug, schemars::JsonSchema)]
-pub struct Response {
-    grade: f64,
-}
+pub type Result = Assignment;
 
 #[openapi(tag = "Assignments")]
-#[get("/assignments/<assignment_id>/solution")]
+#[get("/assignments/solution")]
 pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<Json<Response>, BadRequest<Json<Error>>> {
     let session_id = jar.get("session_id").map(|cookie| cookie.value())
             .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
@@ -42,19 +41,17 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &Cook
                 .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
         };
 
-        let (grade, solution_data): (Option<f64>, Option<Vec<u8>>) = {
-            let uid = user_id;
+        let result: Vec<Assignment> = {
             let aid = assignment_id;
 
-            use crate::dbschema::user_solution_assignments::dsl::*;
 
-            solution::table
-                .inner_join(user_solution_assignments.on(solution::solution_id.eq(solution_id)))
+            assigments::table
+                .inner_join(user_subjects.on(user_subjects::user_id.eq(user_id)))
                 .filter(user_id.eq(uid))
                 .filter(assigment_id.eq(aid))
                 .order(solution::submission_date.desc())
-                .select((solution::grade, solution::solution_data))
-                .first(c)
+                .select(assigments::all_columns)
+                .get_results(c)
                 .map_err(|_e| Error::Other("Failed to execute a query".to_string()))?
         };
 

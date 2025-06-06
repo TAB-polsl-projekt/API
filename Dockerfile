@@ -1,7 +1,5 @@
-ARG DOCKER_REGISTRY=docker-registry-remote.artifactory-espoo1.int.net.nokia.com
-
 # Use the official Rust image as the base image for the build stage
-FROM ${DOCKER_REGISTRY}/rust:1.85 AS builder
+FROM rust:1.85 AS builder
 
 # Set the working directory
 WORKDIR /usr/src/backend
@@ -21,15 +19,12 @@ COPY . .
 
 # Build the application
 RUN cargo build --release
-# Build the OpenAPI generator
-RUN cargo build --release --bin openapi-generator
 
 # Use a smaller image for the final runtime
-FROM ${DOCKER_REGISTRY}/debian:bookworm-slim
+FROM debian:bookworm-slim
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/backend/target/release/backend /usr/local/bin/backend
-COPY --from=builder /usr/src/backend/target/release/openapi-generator  /usr/local/bin/openapi-generator
 COPY Rocket.toml .
 
 # Expose the port your application runs on
