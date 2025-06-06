@@ -3,7 +3,7 @@ use diesel::{prelude::{Insertable, Queryable}, AsChangeset};
 use schemars::JsonSchema;
 use serde::{Serialize};
 
-use crate::dbschema::{assigments, solution, users};
+use crate::dbschema::{assigments, solution, subjects, users};
 
 use serde::{Deserialize, Deserializer};
 
@@ -56,12 +56,20 @@ pub struct AssignmentUpdate {
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
-#[diesel(table_name = subject)]
+#[diesel(table_name = subjects)]
 pub struct Subject {
     pub subject_id: Option<String>,
     pub subject_name: Option<String>,
     pub editor_role_id: String
 }
+
+#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, AsChangeset)]
+#[diesel(table_name = subjects)]
+pub struct SubjectUpdate {
+    pub subject_name: Option<String>,
+    pub editor_role_id: Option<String>
+}
+
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
 #[serde(crate = "rocket::serde")]
