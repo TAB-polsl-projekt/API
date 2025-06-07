@@ -77,16 +77,26 @@ pub struct SubjectUpdate {
 pub struct Solution {
     pub solution_id: Option<String>,
     #[serde(skip)]
-    pub grade: f64,
+    pub grade: Option<f64>,
     #[serde(deserialize_with = "from_timestamp")]
     #[serde(skip)]
-    pub submission_date: NaiveDateTime,
+    pub submission_date: Option<NaiveDateTime>,
     #[serde(serialize_with = "serde_bytes::serialize")]
     #[serde(deserialize_with = "serde_bytes::deserialize")]
-    pub solution_data: Vec<u8>,
+    pub solution_data: Option<Vec<u8>>,
     #[serde(skip)]
     pub reviewed_by: Option<String>,
     #[serde(deserialize_with = "from_timestamp")]
     #[serde(skip)]
-    pub review_date: NaiveDateTime
+    pub review_date: Option<NaiveDateTime>
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize)]
+#[diesel(table_name = session_refresh_keys)]
+pub struct SessionRefreshKeys {
+    pub refresh_key_id: Option<String>,
+    pub user_id: String,
+    pub expiration_time: Option<NaiveDateTime>,
+    pub refresh_count: Option<i32>,
+    pub refresh_limit: Option<i32>,
 }

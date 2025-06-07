@@ -1,13 +1,14 @@
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::{get, http::CookieJar, serde::json::Json};
+use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 use diesel::prelude::*;
 
-use crate::dbmodels::{Assignment, User};
+use crate::dbmodels::Assignment;
 use crate::dbschema::{assigments, subjects, user_subjects};
+use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -28,21 +29,10 @@ pub struct Response {
 
 #[openapi(tag = "Account")]
 #[get("/subjects/<subject_id>")]
-pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<Json<Response>, BadRequest<Json<Error>>> {
-    let session_id = jar.get("session_id").map(|cookie| cookie.value())
-            .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
+pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+    let user_id = session.user_id;
 
     conn.run(move |c| -> Result<_, Error> {
-
-        let user_id: String = {
-            use crate::dbschema::session_refresh_keys::dsl::*;
-            
-            session_refresh_keys
-                .filter(refresh_key_id.eq(session_id))
-                .select(user_id)
-                .first(c)
-                .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
-        };
 
         let assignments: Vec<_> = {
             subjects::table

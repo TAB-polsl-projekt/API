@@ -1,24 +1,21 @@
 use db::DbConn;
+use diesel::SqliteConnection;
 use rocket::{catch, catchers, http::Method, launch, options, response::status, Request};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 mod api;
+pub mod session;
 
-#[macro_use]
-extern crate diesel;
-#[macro_use]
-extern crate diesel_migrations;
-
-use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
 use rocket_okapi::mount_endpoints_and_merged_docs;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 use std::env;
 
+use crate::db::DbPool;
+
 pub mod dbschema;
 pub mod dbmodels;
 pub mod db;
-pub type DbPool = Pool<ConnectionManager<SqliteConnection>>;
 
 #[catch(404)]
 fn not_found(req: &Request) -> status::NotFound<String> {

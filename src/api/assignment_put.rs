@@ -1,14 +1,14 @@
 use diesel::dsl::exists;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::{put, http::CookieJar, serde::json::Json};
+use diesel::{ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, RunQueryDsl};
+use rocket::{put, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
-use diesel::prelude::*;
 
-use crate::dbmodels::{Assignment, AssignmentUpdate, User};
-use crate::dbschema::{assigments, session_refresh_keys, subjects, user_solution_assignments, user_subjects};
+use crate::dbmodels::AssignmentUpdate;
+use crate::dbschema::{assigments, subjects, user_subjects};
+use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -23,21 +23,11 @@ pub enum Error {
 
 #[openapi(tag = "Account")]
 #[put("/assignments/<assignment_id>", data = "<assignment_update>")]
-pub async fn endpoint(assignment_id: String, assignment_update: Json<AssignmentUpdate>, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<(), BadRequest<Json<Error>>> {
+pub async fn endpoint(assignment_id: String, assignment_update: Json<AssignmentUpdate>, conn: crate::db::DbConn, session: Session) -> Result<(), BadRequest<Json<Error>>> {
     let assignment_update = assignment_update.0;
-    
-    let session_id = jar.get("session_id").map(|cookie| cookie.value())
-            .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
+    let user_id = session.user_id;
 
     conn.run(move |c| -> Result<_, Error> {
-
-        let user_id: String = {
-            session_refresh_keys::table
-                .filter(session_refresh_keys::refresh_key_id.eq(session_id))
-                .select(session_refresh_keys::user_id)
-                .first(c)
-                .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
-        };
 
         let is_user_editor_query = assigments::table
             .inner_join(subjects::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))

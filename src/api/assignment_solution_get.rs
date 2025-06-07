@@ -1,14 +1,14 @@
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::{get, http::CookieJar, serde::json::Json};
+use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 use diesel::prelude::*;
-use crate::dbschema::assigments::dsl::assigments;
 
-use crate::dbmodels::Assignment;
-use crate::dbschema::{solution, user_subjects};
+use crate::dbmodels::Solution;
+use crate::dbschema::{assigments, solution, user_solution_assignments};
+use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -21,43 +21,29 @@ pub enum Error {
     
 }
 
-pub type Result = Assignment;
+pub type Response = Solution;
 
 #[openapi(tag = "Assignments")]
-#[get("/assignments/solution")]
-pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<Json<Response>, BadRequest<Json<Error>>> {
-    let session_id = jar.get("session_id").map(|cookie| cookie.value())
-            .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
+#[get("/assignments/<assignment_id>/solution")]
+pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+    let user_id = session.user_id;
 
     conn.run(move |c| -> Result<_, Error> {
 
-        let user_id: String = {
-            use crate::dbschema::session_refresh_keys::dsl::*;
-            
-            session_refresh_keys
-                .filter(refresh_key_id.eq(session_id))
-                .select(user_id)
-                .first(c)
-                .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
-        };
-
-        let result: Vec<Assignment> = {
-            let aid = assignment_id;
-
+        let solution: Solution = {
 
             assigments::table
-                .inner_join(user_subjects.on(user_subjects::user_id.eq(user_id)))
-                .filter(user_id.eq(uid))
-                .filter(assigment_id.eq(aid))
+                .inner_join(user_solution_assignments::table.on(user_solution_assignments::assigment_id.eq(assigments::assigment_id)))
+                .inner_join(solution::table.on(solution::solution_id.eq(user_solution_assignments::solution_id)))
+                .filter(user_solution_assignments::user_id.eq(user_id))
+                .filter(assigments::assigment_id.eq(assignment_id))
                 .order(solution::submission_date.desc())
-                .select(assigments::all_columns)
-                .get_results(c)
+                .select(solution::all_columns)
+                .first(c)
                 .map_err(|_e| Error::Other("Failed to execute a query".to_string()))?
         };
 
-        let grade = grade.unwrap_or(0.0);
-
-        Ok(Json(Response { grade }))
+        Ok(Json(solution))
     })
     .await
     .map_err(|e| BadRequest(Json(e)))

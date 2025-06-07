@@ -1,16 +1,17 @@
-use chrono::{NaiveDateTime, Utc};
+use chrono::Utc;
 use diesel::dsl::exists;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::post;
 use rocket::serde::uuid::Uuid;
-use rocket::{get, http::CookieJar, serde::json::Json};
+use rocket::serde::json::Json;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 use diesel::prelude::*;
+use crate::session::Session;
 
-use crate::dbmodels::{Assignment, Solution, Subject, User};
+use crate::dbmodels::Solution;
 use crate::dbschema::{assigments, solution, subjects, user_subjects};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -26,22 +27,11 @@ pub enum Error {
 
 #[openapi(tag = "Account")]
 #[post("/assignments/<assignment_id>/solution", data = "<sln>")]
-pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::db::DbConn, jar: &CookieJar<'_>) -> Result<(), BadRequest<Json<Error>>> {
+pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::db::DbConn, session: Session) -> Result<(), BadRequest<Json<Error>>> {
     let mut sln = sln.0;
-    let session_id = jar.get("session_id").map(|cookie| cookie.value())
-            .ok_or(Error::Other("Invalid session ID".to_string())).map_err(|e| BadRequest(Json(e)))?.to_string();
+    let user_id = session.user_id;
 
     conn.run(move |c| -> Result<_, Error> {
-
-        let user_id: String = {
-            use crate::dbschema::session_refresh_keys::dsl::*;
-            
-            session_refresh_keys
-                .filter(refresh_key_id.eq(session_id))
-                .select(user_id)
-                .first(c)
-                .map_err(|_e| Error::Other("Invalid session ID".to_string()))?
-        };
 
         let query = assigments::table
             .inner_join(subjects::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))
@@ -58,7 +48,7 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
         }
 
         sln.solution_id = Some(Uuid::new_v4().to_string());
-        sln.submission_date = Utc::now().naive_utc();
+        sln.submission_date = Some(Utc::now().naive_utc());
 
         let _result = diesel::insert_into(solution::table)
             .values(sln)
