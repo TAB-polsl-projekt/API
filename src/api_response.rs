@@ -6,7 +6,7 @@ macro_rules! define_api_response {
         $vis:vis enum $name:ident {
             $(
                 // each tuple: (HTTP code, description, body‐wrapper type)
-                $variant:ident => ($code:literal, $desc:expr, $body:ty)
+                $variant:ident => ($code:literal, $desc:expr, $body:ty, ($($ErrTy:path),*))
             ),* $(,)?
         }
     ) => {
@@ -17,6 +17,17 @@ macro_rules! define_api_response {
                 $variant($body),
             )*
         }
+
+        $(
+            $(
+                impl From<$ErrTy> for $name {
+                    fn from(_err: $ErrTy) -> Self {
+                        // we assume payload is Default; for `()` this just yields `()`
+                        $name::$variant(Default::default())
+                    }
+                }
+            )*
+        )*
 
         // Implement Rocket's Responder
         impl<'r> ::rocket::response::Responder<'r, 'static> for $name {

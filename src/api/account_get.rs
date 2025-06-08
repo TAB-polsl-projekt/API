@@ -4,7 +4,7 @@ use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, s
 
 use crate::dbmodels::User;
 use crate::dbschema::users;
-use crate::{define_api_error, define_api_response};
+use crate::{define_api_response};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -12,10 +12,10 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "TEST", User),
+    Ok => (200, "TEST", User, ()),
 });
 
-define_api_error!(pub enum Error {
+define_api_response!(pub enum Error {
     InternalServerError => (500, "TEST", String, (diesel::result::Error)),
 });
 

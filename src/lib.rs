@@ -4,4 +4,3 @@ pub mod dbschema;
 pub mod dbmodels;
 pub mod session;
 #[macro_use] pub mod api_response;
-#[macro_use] pub mod api_error;
