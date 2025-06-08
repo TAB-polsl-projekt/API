@@ -18,7 +18,7 @@ pub enum Error {
     Other(String)
 }
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Account", operation_id = "putAccountInfo")]
 #[put("/account", data = "<user>")]
 pub async fn endpoint(user: Json<UserUpdate>, conn: crate::db::DbConn, session: Session) -> Result<(), BadRequest<Json<Error>>> {
     let user_id = session.user_id;

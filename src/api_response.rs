@@ -6,7 +6,7 @@ macro_rules! define_api_response {
         $vis:vis enum $name:ident {
             $(
                 // each tuple: (HTTP code, description, body‐wrapper type)
-                $variant:ident => ($code:literal, $desc:expr, $body:ty, ($($ErrTy:path),*))
+                $variant:ident => ($code:literal, $desc:expr, $body:ty, ($($FromTy:path),*))
             ),* $(,)?
         }
     ) => {
@@ -20,8 +20,8 @@ macro_rules! define_api_response {
 
         $(
             $(
-                impl From<$ErrTy> for $name {
-                    fn from(_err: $ErrTy) -> Self {
+                impl From<$FromTy> for $name {
+                    fn from(_from: $FromTy) -> Self {
                         // we assume payload is Default; for `()` this just yields `()`
                         $name::$variant(Default::default())
                     }

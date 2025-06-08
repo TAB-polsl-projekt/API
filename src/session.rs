@@ -1,7 +1,7 @@
 use diesel::{query_dsl::methods::{FilterDsl, SelectDsl}, ExpressionMethods, RunQueryDsl};
-use okapi::openapi3::Responses;
+use okapi::{openapi3::{Parameter, RefOr, Response, Responses, ServerVariable}, Map};
 use rocket::{http::Status, outcome::Outcome, request::{self, FromRequest, Request}};
-use rocket_okapi::request::{OpenApiFromRequest, RequestHeaderInput};
+use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, RequestHeaderInput}};
 
 use crate::{db::DbConn, dbmodels::SessionRefreshKeys, dbschema::session_refresh_keys};
 
@@ -26,17 +26,19 @@ impl<'r> FromRequest<'r> for Session {
             None => return Outcome::Error((Status::Unauthorized, ())),
         };
 
-        let srk_result: Option<SessionRefreshKeys> = db.run(move |c| {
+        let srk_result = db.run(move |c| {
             session_refresh_keys::table
                 .filter(session_refresh_keys::refresh_key_id.eq(&session_id))
                 .select(session_refresh_keys::all_columns)
                 .first(c)
-                .ok()
         }).await;
 
-        let srk = match srk_result {
-            Some(srk) => srk,
-            None => return Outcome::Error((Status::InternalServerError, ()))
+        let srk: SessionRefreshKeys = match srk_result {
+            Ok(srk) => srk,
+            Err(err) => match err {
+                diesel::result::Error::NotFound => return Outcome::Error((Status::Unauthorized, ())),
+                _ => return Outcome::Error((Status::InternalServerError, ())),
+            }
         };
 
         // TODO: Check if valid
@@ -54,14 +56,53 @@ impl<'r> FromRequest<'r> for Session {
 
 impl<'r> OpenApiFromRequest<'r> for Session {
     fn from_request_input(
-            _gen: &mut rocket_okapi::r#gen::OpenApiGenerator,
-            _name: String,
-            _required: bool,
-        ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
-        Ok(RequestHeaderInput::None)
+        _gen: &mut OpenApiGenerator,
+        _name: String,
+        _required: bool,
+    ) -> rocket_okapi::Result<RequestHeaderInput> {
+        // Require a session_id cookie for authentication
+        let param = Parameter {
+            name: "session_id".to_owned(),
+            required: false,
+            location: "/".to_owned(),
+            description: Some("Session identifier cookie".to_owned()),
+            deprecated: false,
+            allow_empty_value: false,
+            extensions: Map::new(),
+            value: okapi::openapi3::ParameterValue::Content { content: Default::default() },
+        };
+        
+        Ok(RequestHeaderInput::Parameter(param))
     }
 
-    fn get_responses(_gen: &mut rocket_okapi::r#gen::OpenApiGenerator) -> rocket_okapi::Result<okapi::openapi3::Responses> {
-        Ok(Responses::default())
+    fn get_responses(
+        _gen: &mut OpenApiGenerator,
+    ) -> rocket_okapi::Result<Responses> {
+        // Define possible responses: 401 Unauthorized, 500 Internal Server Error
+        let mut responses = Responses::default();
+
+        responses.responses.insert(
+            "401".to_owned(),
+            RefOr::Object(Response {
+                description: "Unauthorized: missing or invalid session cookie".to_owned(),
+                headers: Map::new(),
+                content: Map::new(),
+                links: Map::new(),
+                extensions: Map::new(),
+            }),
+        );
+
+        responses.responses.insert(
+            "500".to_owned(),
+            RefOr::Object(Response {
+                description: "Internal server error".to_owned(),
+                headers: Map::new(),
+                content: Map::new(),
+                links: Map::new(),
+                extensions: Map::new(),
+            }),
+        );
+
+        Ok(responses)
     }
 }
