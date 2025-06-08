@@ -1,4 +1,5 @@
 use db::DbConn;
+use rocket::routes;
 use rocket::{catch, catchers, http::Method, launch, options, response::status, Request};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 mod api;
@@ -38,6 +39,7 @@ async fn rocket() -> _ {
     let mut rocket_builder = rocket::build()
     .attach(DbConn::fairing())
         .attach(cors)
+        .mount("/", routes![options_preflight])
         .mount("/swagger-ui/", make_swagger_ui(&SwaggerUIConfig {
             url: "../api/openapi.json".to_owned(),
             ..Default::default()
