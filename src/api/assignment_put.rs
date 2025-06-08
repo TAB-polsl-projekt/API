@@ -23,7 +23,11 @@ pub enum Error {
 
 #[openapi(tag = "Account")]
 #[put("/assignments/<assignment_id>", data = "<assignment_update>")]
-pub async fn endpoint(assignment_id: String, assignment_update: Json<AssignmentUpdate>, conn: crate::db::DbConn, session: Session) -> Result<(), BadRequest<Json<Error>>> {
+pub async fn endpoint(
+    assignment_id: String,
+    assignment_update: Json<AssignmentUpdate>,
+    conn: crate::db::DbConn, session: Session
+) -> Result<(), BadRequest<Json<Error>>> {
     let assignment_update = assignment_update.0;
     let user_id = session.user_id;
 

@@ -14,10 +14,12 @@ dotenv = "0.15.0"
 enum-assoc = "1.2.4"
 jsonwebtoken = "9"
 okapi = { version = "0.7.0", features = ["impl_json_schema"] }
+paste = "1.0.15"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 rocket = { version = "0.5.1", features = ["json"] }
 rocket_cors = "0.6.0"
 rocket_okapi = { version = "0.9.0", features = ["swagger", "uuid", "rocket_sync_db_pools", "rapidoc", "rocket_db_pools", "rocket_dyn_templates"] }
+rocket_okapi_codegen = "0.9.0"
 rocket_sync_db_pools = { version = "0.1.0", features = ["diesel_sqlite_pool"] }
 schemars = { version = "0.8.22", features = ["chrono"] }
 serde = { version = "1.0.219", features = ["derive"] }

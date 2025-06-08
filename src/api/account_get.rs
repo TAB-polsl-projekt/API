@@ -1,44 +1,36 @@
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
-use rocket_okapi::okapi::schemars;
-use serde::{Deserialize, Serialize};
-use rocket::response::status::BadRequest;
 
 use crate::dbmodels::User;
 use crate::dbschema::users;
+use crate::{define_api_error, define_api_response};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
 }
 
-#[derive(Serialize, Deserialize, Debug, schemars::JsonSchema)]
-#[serde(untagged)]
-pub enum Error {
-    Other(String)
-    
-}
+define_api_response!(pub enum Response {
+    Ok => (200, "TEST", User),
+});
 
-pub type Response = User;
+define_api_error!(pub enum Error {
+    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+});
 
-#[openapi(tag = "Account")]
+/// Test
+#[openapi(tag = "Account", operation_id = "getAccountInfo")]
 #[get("/account")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
 
-    conn.run(move |c| -> Result<_, Error> {
+    let result: User = conn.run(move |c| {
+        users::table
+            .filter(users::user_id.eq(user_id))
+            .select(users::all_columns)
+            .first(c)
+    }).await?;
 
-        let result: User = {
-            users::table
-                .filter(users::user_id.eq(user_id))
-                .select(users::all_columns)
-                .first(c)
-                .map_err(|_e| Error::Other("Failed to find the user".to_string()))?
-        };
-
-        Ok(Json(result))
-    })
-    .await
-    .map_err(|e| BadRequest(Json(e)))
+    Ok(Response::Ok(result))
 }

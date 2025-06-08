@@ -4,6 +4,10 @@ use rocket::{catch, catchers, http::Method, launch, options, response::status, R
 use rocket_cors::{AllowedOrigins, CorsOptions};
 mod api;
 pub mod session;
+#[macro_use] extern crate rocket_okapi_codegen;
+#[macro_use] extern crate rocket_okapi;
+#[macro_use] pub mod api_response;
+#[macro_use] pub mod api_error;
 
 use diesel::r2d2::{ConnectionManager, Pool};
 use dotenv::dotenv;
