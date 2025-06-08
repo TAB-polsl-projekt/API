@@ -27,7 +27,7 @@ pub struct Response {
     assignments: Vec<Assignment>,
 }
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Subjects", operation_id = "getSubject")]
 #[get("/subjects/<subject_id>")]
 pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
     let user_id = session.user_id;
@@ -37,7 +37,7 @@ pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Sess
         let assignments: Vec<_> = {
             subjects::table
                 .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
-                .inner_join(assignments::table.on(subjects::subject_id.eq(assignments::subject_id.nullable())))
+                .inner_join(assignments::table.on(subjects::subject_id.eq(assignments::subject_id)))
                 .filter(user_subjects::user_id.eq(user_id))
                 .filter(subjects::subject_id.eq(subject_id))
                 .select(assignments::all_columns)

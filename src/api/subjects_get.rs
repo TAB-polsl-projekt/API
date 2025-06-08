@@ -27,7 +27,7 @@ pub struct Response {
     subject_name: String,
 }
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Subjects", operation_id = "getSubjects")]
 #[get("/subjects")]
 pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Json<Vec<Response>>, BadRequest<Json<Error>>> {
     let user_id = session.user_id;
@@ -46,7 +46,7 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Json<
         let responses = subjects
             .iter()
             .map(|x| {
-                    let subject_id = x.subject_id.clone().unwrap_or("".to_string());
+                    let subject_id = x.subject_id.clone();
                     let subject_name = x.subject_name.clone().unwrap_or("".to_string());
 
                     Response {

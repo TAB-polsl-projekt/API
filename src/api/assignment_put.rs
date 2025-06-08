@@ -1,5 +1,5 @@
 use diesel::dsl::exists;
-use diesel::{ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{put, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
@@ -34,7 +34,7 @@ pub async fn endpoint(
     conn.run(move |c| -> Result<_, Error> {
 
         let is_user_editor_query = assignments::table
-            .inner_join(subjects::table.on(subjects::subject_id.eq(assignments::subject_id.nullable())))
+            .inner_join(subjects::table.on(subjects::subject_id.eq(assignments::subject_id)))
             .inner_join(user_subjects::table.on(user_subjects::role_id.eq(subjects::editor_role_id)))
             .filter(user_subjects::user_id.eq(user_id))
             .filter(assignments::assignment_id.eq(&assignment_id));

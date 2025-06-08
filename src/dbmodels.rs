@@ -21,13 +21,14 @@ where
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
 #[diesel(table_name = users)]
 pub struct User {
-    pub user_id: Option<String>,
+    pub user_id: String,
     pub email: String,
     pub name: String,
     pub surname: String,
     pub student_id: Option<String>,
     pub user_disabled: bool,
-    pub last_login_time: Option<NaiveDateTime>
+    pub last_login_time: Option<NaiveDateTime>,
+    pub is_admin: bool
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, AsChangeset)]
@@ -44,7 +45,7 @@ pub struct UserUpdate {
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
 #[diesel(table_name = assignments)]
 pub struct Assignment {
-    pub assignment_id: Option<String>,
+    pub assignment_id: String,
     pub subject_id: String,
     pub title: String,
     pub description: Option<String>,
@@ -61,7 +62,7 @@ pub struct AssignmentUpdate {
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
 #[diesel(table_name = subjects)]
 pub struct Subject {
-    pub subject_id: Option<String>,
+    pub subject_id: String,
     pub subject_name: Option<String>,
     pub editor_role_id: String
 }
@@ -78,9 +79,9 @@ pub struct SubjectUpdate {
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = solution)]
 pub struct Solution {
-    pub solution_id: Option<String>,
+    pub solution_id: String,
     #[serde(skip)]
-    pub grade: Option<f32>,
+    pub grade: Option<f64>,
     #[serde(deserialize_with = "from_timestamp")]
     #[serde(skip)]
     pub submission_date: Option<NaiveDateTime>,
@@ -100,7 +101,7 @@ pub struct Solution {
 #[derive(Debug, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = session_refresh_keys)]
 pub struct SessionRefreshKeys {
-    pub refresh_key_id: Option<String>,
+    pub refresh_key_id: String,
     pub user_id: String,
     pub expiration_time: NaiveDateTime,
     pub refresh_count: i32,

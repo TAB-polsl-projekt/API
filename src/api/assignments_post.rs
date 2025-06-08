@@ -1,5 +1,5 @@
 use diesel::dsl::exists;
-use diesel::{ExpressionMethods, JoinOnDsl, NullableExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{post, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
@@ -29,7 +29,7 @@ pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, ses
 
     let _result = conn.run(move |c| {
         let is_user_admin_query = roles::table
-            .inner_join(user_subjects::table.on(roles::role_id.eq(user_subjects::role_id.nullable())))
+            .inner_join(user_subjects::table.on(roles::role_id.eq(user_subjects::role_id)))
             .filter(roles::role_id.eq("0"))
             .filter(user_subjects::user_id.eq(user_id));
 

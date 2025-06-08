@@ -42,7 +42,7 @@ impl<'r> FromRequest<'r> for Session {
         };
 
         // TODO: Check if valid
-        let session_id = srk.refresh_key_id.unwrap();
+        let session_id = srk.refresh_key_id;
         let user_id = srk.user_id;
 
         Outcome::Success(
