@@ -1,50 +1,39 @@
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
-use rocket_okapi::okapi::schemars;
-use serde::{Deserialize, Serialize};
-use rocket::response::status::BadRequest;
-use diesel::prelude::*;
 
-use crate::dbmodels::Solution;
-use crate::dbschema::{assigments, solution, user_solution_assignments};
+use crate::dbmodels::{Solution};
+use crate::dbschema::{assignments, solution, user_solution_assignments};
+use crate::define_api_response;
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
 }
 
-#[derive(Serialize, Deserialize, Debug, schemars::JsonSchema)]
-#[serde(untagged)]
-pub enum Error {
-    Other(String)
-    
-}
+define_api_response!(pub enum Response {
+    Ok => (200, "TEST", Solution, ()),
+});
 
-pub type Response = Solution;
+define_api_response!(pub enum Error {
+    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+});
 
-#[openapi(tag = "Assignments")]
+#[openapi(tag = "Assignments", operation_id = "getAssignmentSolution")]
 #[get("/assignments/<assignment_id>/solution")]
-pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
 
-    conn.run(move |c| -> Result<_, Error> {
+    let result = conn.run(move |c| {
+        assignments::table
+            .inner_join(user_solution_assignments::table.on(user_solution_assignments::assignment_id.eq(assignments::assignment_id)))
+            .inner_join(solution::table.on(solution::solution_id.eq(user_solution_assignments::solution_id)))
+            .filter(user_solution_assignments::user_id.eq(user_id))
+            .filter(assignments::assignment_id.eq(assignment_id))
+            .order(solution::submission_date.desc())
+            .select(solution::all_columns)
+            .first(c)
+    }).await?;
 
-        let solution: Solution = {
-
-            assigments::table
-                .inner_join(user_solution_assignments::table.on(user_solution_assignments::assigment_id.eq(assigments::assigment_id)))
-                .inner_join(solution::table.on(solution::solution_id.eq(user_solution_assignments::solution_id)))
-                .filter(user_solution_assignments::user_id.eq(user_id))
-                .filter(assigments::assigment_id.eq(assignment_id))
-                .order(solution::submission_date.desc())
-                .select(solution::all_columns)
-                .first(c)
-                .map_err(|_e| Error::Other("Failed to execute a query".to_string()))?
-        };
-
-        Ok(Json(solution))
-    })
-    .await
-    .map_err(|e| BadRequest(Json(e)))
+    Ok(Response::Ok(result))
 }

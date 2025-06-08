@@ -1,20 +1,12 @@
 use db::DbConn;
-use diesel::SqliteConnection;
 use rocket::{catch, catchers, http::Method, launch, options, response::status, Request};
 use rocket_cors::{AllowedOrigins, CorsOptions};
 mod api;
 pub mod session;
-#[macro_use] extern crate rocket_okapi_codegen;
-#[macro_use] extern crate rocket_okapi;
 #[macro_use] pub mod api_response;
 
-use diesel::r2d2::{ConnectionManager, Pool};
-use dotenv::dotenv;
 use rocket_okapi::mount_endpoints_and_merged_docs;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
-use std::env;
-
-use crate::db::DbPool;
 
 pub mod dbschema;
 pub mod dbmodels;
@@ -28,17 +20,6 @@ fn not_found(req: &Request) -> status::NotFound<String> {
 
 #[options("/<_..>")]
 fn options_preflight() {}
-
-fn establish_connection() -> DbPool {
-    dotenv().ok();
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
-    Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool.")
-}
-
 
 #[launch]
 async fn rocket() -> _ {

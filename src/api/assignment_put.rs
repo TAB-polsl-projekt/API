@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 
 use crate::dbmodels::AssignmentUpdate;
-use crate::dbschema::{assigments, subjects, user_subjects};
+use crate::dbschema::{assignments, subjects, user_subjects};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -33,11 +33,11 @@ pub async fn endpoint(
 
     conn.run(move |c| -> Result<_, Error> {
 
-        let is_user_editor_query = assigments::table
-            .inner_join(subjects::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))
-            .inner_join(user_subjects::table.on(user_subjects::role_id.eq(subjects::editor_role_id.nullable())))
+        let is_user_editor_query = assignments::table
+            .inner_join(subjects::table.on(subjects::subject_id.eq(assignments::subject_id.nullable())))
+            .inner_join(user_subjects::table.on(user_subjects::role_id.eq(subjects::editor_role_id)))
             .filter(user_subjects::user_id.eq(user_id))
-            .filter(assigments::assigment_id.eq(&assignment_id));
+            .filter(assignments::assignment_id.eq(&assignment_id));
 
         let is_user_editor: bool = diesel::select(exists(is_user_editor_query))
             .get_result(c)
@@ -48,7 +48,7 @@ pub async fn endpoint(
         }
 
         let _rows_affected = diesel::update(
-            assigments::table.filter(assigments::assigment_id.eq(&assignment_id))
+            assignments::table.filter(assignments::assignment_id.eq(&assignment_id))
         ).set(&assignment_update)
         .execute(c)
         .map_err(|_err| Error::Other("".to_string()))?;

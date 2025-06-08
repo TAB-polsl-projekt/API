@@ -31,12 +31,12 @@ macro_rules! define_api_response {
 
         // Implement Rocket's Responder
         impl<'r> ::rocket::response::Responder<'r, 'static> for $name {
-            fn respond_to(self, req: &'r ::rocket::request::Request<'_>) -> ::rocket::response::Result<'static> {
+            fn respond_to(self, _req: &'r ::rocket::request::Request<'_>) -> ::rocket::response::Result<'static> {
                 match self {
                     $(
                         $name::$variant(body) => {
                             let body = Json(body);
-                            ::rocket::response::Response::build_from(body.respond_to(req)?)
+                            ::rocket::response::Response::build_from(body.respond_to(_req)?)
                                 .status(::rocket::http::Status::new($code))
                                 .ok()
                         }
@@ -48,13 +48,14 @@ macro_rules! define_api_response {
         // Implement OpenAPI support
         impl rocket_okapi::response::OpenApiResponderInner for $name {
             fn responses(
-                r#gen: &mut ::rocket_okapi::r#gen::OpenApiGenerator
+                _gen: &mut ::rocket_okapi::r#gen::OpenApiGenerator
             ) -> rocket_okapi::Result<::rocket_okapi::okapi::openapi3::Responses> {
+                #[allow(unused_mut)]
                 let mut responses = ::rocket_okapi::okapi::openapi3::Responses::default();
                 $(
                     // Extract the inner type from the wrapper
                     //type Inner = <$body as rocket_okapi::response::OpenApiResponder>::Inner;
-                    let schema = r#gen.json_schema::<$body>();
+                    let schema = _gen.json_schema::<$body>();
                     let mut content: ::rocket_okapi::okapi::schemars::Map<String, ::rocket_okapi::okapi::openapi3::MediaType> = Default::default();
                     content.insert(
                         "application/json".to_owned(),

@@ -12,7 +12,7 @@ use diesel::prelude::*;
 use crate::session::Session;
 
 use crate::dbmodels::Solution;
-use crate::dbschema::{assigments, solution, subjects, user_subjects};
+use crate::dbschema::{assignments, solution, subjects, user_subjects};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -33,11 +33,11 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
 
     conn.run(move |c| -> Result<_, Error> {
 
-        let query = assigments::table
-            .inner_join(subjects::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))
+        let query = assignments::table
+            .inner_join(subjects::table.on(subjects::subject_id.eq(assignments::subject_id.nullable())))
             .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
             .filter(user_subjects::user_id.eq(user_id))
-            .filter(assigments::assigment_id.eq(assignment_id));
+            .filter(assignments::assignment_id.eq(assignment_id));
 
         let user_has_access_to_assignments: bool = diesel::select(exists(query))
             .get_result(c)

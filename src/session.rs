@@ -1,5 +1,5 @@
 use diesel::{query_dsl::methods::{FilterDsl, SelectDsl}, ExpressionMethods, RunQueryDsl};
-use okapi::{openapi3::{Parameter, RefOr, Response, Responses, ServerVariable}, Map};
+use okapi::{openapi3::{Parameter, RefOr, Response, Responses}, Map};
 use rocket::{http::Status, outcome::Outcome, request::{self, FromRequest, Request}};
 use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, RequestHeaderInput}};
 

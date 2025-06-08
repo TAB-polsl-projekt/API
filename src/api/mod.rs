@@ -24,6 +24,7 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     all_routes_and_docs.push(account_get::get_routes_and_docs(settings));
     all_routes_and_docs.push(account_put::get_routes_and_docs(settings));
     all_routes_and_docs.push(subject_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(subject_put::get_routes_and_docs(settings));
     all_routes_and_docs.push(subjects_get::get_routes_and_docs(settings));
     all_routes_and_docs.push(assignment_get::get_routes_and_docs(settings));
     all_routes_and_docs.push(assignment_solution_post::get_routes_and_docs(settings));

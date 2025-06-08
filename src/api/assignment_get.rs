@@ -1,45 +1,37 @@
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
-use rocket_okapi::okapi::schemars;
-use serde::{Deserialize, Serialize};
-use rocket::response::status::BadRequest;
 
 use crate::dbmodels::Assignment;
-use crate::dbschema::{assigments, user_solution_assignments};
+use crate::dbschema::{assignments, user_solution_assignments};
+use crate::define_api_response;
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
 }
 
-#[derive(Serialize, Deserialize, Debug, schemars::JsonSchema)]
-#[serde(untagged)]
-pub enum Error {
-    Other(String)
-    
-}
+define_api_response!(pub enum Response {
+    Ok => (200, "TEST", Assignment, ()),
+});
 
-pub type Response = Assignment;
+define_api_response!(pub enum Error {
+    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+});
 
 #[openapi(tag = "Account")]
 #[get("/assignments/<assignment_id>")]
-pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Response>, BadRequest<Json<Error>>> {
+pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
     
-    conn.run(move |c| -> Result<_, Error> {
+    let result = conn.run(move |c| {
+        assignments::table
+            .inner_join(user_solution_assignments::table.on(user_solution_assignments::assignment_id.eq(assignments::assignment_id)))
+            .filter(user_solution_assignments::user_id.eq(user_id))
+            .filter(assignments::assignment_id.eq(assignment_id))
+            .select(assignments::all_columns)
+            .first(c)
+    }).await?;
 
-        let assignment: Assignment = {
-            assigments::table
-                .inner_join(user_solution_assignments::table.on(user_solution_assignments::assigment_id.eq(assigments::assigment_id)))
-                .filter(user_solution_assignments::user_id.eq(user_id))
-                .select(assigments::all_columns)
-                .get_result(c)
-                .map_err(|_e| Error::Other("".to_string()))?
-        };
-
-        Ok(Json(assignment))
-    })
-    .await
-    .map_err(|e| BadRequest(Json(e)))
+    Ok(Response::Ok(result))
 }

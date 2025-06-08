@@ -8,7 +8,7 @@ use rocket::response::status::BadRequest;
 use diesel::prelude::*;
 
 use crate::dbmodels::Assignment;
-use crate::dbschema::{assigments, roles, user_subjects};
+use crate::dbschema::{assignments, roles, user_subjects};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -30,7 +30,7 @@ pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, ses
     conn.run(move |c| -> Result<_, Error> {
 
         let is_user_admin_query = roles::table
-            .inner_join(user_subjects::table.on(user_subjects::role_id.eq(roles::role_id)))
+            .inner_join(user_subjects::table.on(roles::role_id.eq(user_subjects::role_id.nullable())))
             .filter(roles::role_id.eq("0"))
             .filter(user_subjects::user_id.eq(user_id));
 
@@ -42,7 +42,7 @@ pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, ses
             return Err(Error::Other("User is not admin".to_string()));
         }
             
-        let _result = diesel::insert_into(assigments::table)
+        let _result = diesel::insert_into(assignments::table)
             .values(assignment)
             .execute(c)
             .map_err(|_err| Error::Other("".to_string()))?;

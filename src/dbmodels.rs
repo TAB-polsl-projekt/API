@@ -1,9 +1,9 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, NaiveDateTime};
 use diesel::{prelude::{Insertable, Queryable}, AsChangeset};
 use schemars::JsonSchema;
 use serde::{Serialize};
 
-use crate::dbschema::{assigments, solution, subjects, users};
+use crate::dbschema::{assignments, solution, subjects, users};
 
 use serde::{Deserialize, Deserializer};
 
@@ -12,8 +12,10 @@ where
     D: Deserializer<'de>,
 {
     let timestamp = i64::deserialize(deserializer)?;
-    Ok(NaiveDateTime::from_timestamp_opt(timestamp, 0)
-        .ok_or_else(|| serde::de::Error::custom("invalid timestamp"))?)
+    let datetime = DateTime::from_timestamp(timestamp, 0)
+        .ok_or_else(|| serde::de::Error::custom("invalid timestamp"))?;
+    
+    Ok(datetime.naive_utc())
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
@@ -24,7 +26,7 @@ pub struct User {
     pub name: String,
     pub surname: String,
     pub student_id: Option<String>,
-    pub user_disabled: Option<bool>,
+    pub user_disabled: bool,
     pub last_login_time: Option<NaiveDateTime>
 }
 
@@ -40,16 +42,17 @@ pub struct UserUpdate {
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
-#[diesel(table_name = assigments)]
+#[diesel(table_name = assignments)]
 pub struct Assignment {
-    pub assigment_id: Option<String>,
+    pub assignment_id: Option<String>,
     pub subject_id: String,
-    pub title: Option<String>,
-    pub description: Option<String>
+    pub title: String,
+    pub description: Option<String>,
+    pub accepted_mime_types: Option<String>
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, AsChangeset)]
-#[diesel(table_name = assigments)]
+#[diesel(table_name = assignments)]
 pub struct AssignmentUpdate {
     pub title: Option<String>,
     pub description: Option<String>
@@ -77,7 +80,7 @@ pub struct SubjectUpdate {
 pub struct Solution {
     pub solution_id: Option<String>,
     #[serde(skip)]
-    pub grade: Option<f64>,
+    pub grade: Option<f32>,
     #[serde(deserialize_with = "from_timestamp")]
     #[serde(skip)]
     pub submission_date: Option<NaiveDateTime>,
@@ -86,9 +89,12 @@ pub struct Solution {
     pub solution_data: Option<Vec<u8>>,
     #[serde(skip)]
     pub reviewed_by: Option<String>,
+    #[serde(skip)]
+    pub review_comment: Option<String>,
     #[serde(deserialize_with = "from_timestamp")]
     #[serde(skip)]
-    pub review_date: Option<NaiveDateTime>
+    pub review_date: Option<NaiveDateTime>,
+    pub mime_type: Option<String>
 }
 
 #[derive(Debug, Queryable, Serialize, Deserialize)]
@@ -96,7 +102,7 @@ pub struct Solution {
 pub struct SessionRefreshKeys {
     pub refresh_key_id: Option<String>,
     pub user_id: String,
-    pub expiration_time: Option<NaiveDateTime>,
-    pub refresh_count: Option<i32>,
-    pub refresh_limit: Option<i32>,
+    pub expiration_time: NaiveDateTime,
+    pub refresh_count: i32,
+    pub refresh_limit: i32,
 }

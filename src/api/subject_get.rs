@@ -7,7 +7,7 @@ use rocket::response::status::BadRequest;
 use diesel::prelude::*;
 
 use crate::dbmodels::Assignment;
-use crate::dbschema::{assigments, subjects, user_subjects};
+use crate::dbschema::{assignments, subjects, user_subjects};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -37,10 +37,10 @@ pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Sess
         let assignments: Vec<_> = {
             subjects::table
                 .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
-                .inner_join(assigments::table.on(subjects::subject_id.eq(assigments::subject_id.nullable())))
+                .inner_join(assignments::table.on(subjects::subject_id.eq(assignments::subject_id.nullable())))
                 .filter(user_subjects::user_id.eq(user_id))
                 .filter(subjects::subject_id.eq(subject_id))
-                .select(assigments::all_columns)
+                .select(assignments::all_columns)
                 .get_results(c)
                 .map_err(|_e| Error::Other("".to_string()))?
         };
