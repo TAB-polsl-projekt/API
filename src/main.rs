@@ -26,18 +26,18 @@ fn options_preflight() {}
 async fn rocket() -> _ {
 
     let cors = CorsOptions::default()
-    .allowed_origins(AllowedOrigins::all())
-    .allowed_methods(
-        vec![Method::Post, Method::Options]
-            .into_iter()
-            .map(From::from)
-            .collect(),
-    )
-    .to_cors()
-    .expect("CORS configuration failed");
+        .allowed_origins(AllowedOrigins::all())
+        .allowed_methods(
+            vec![Method::Post, Method::Options]
+                .into_iter()
+                .map(From::from)
+                .collect(),
+        )
+        .to_cors()
+        .expect("CORS configuration failed");
 
     let mut rocket_builder = rocket::build()
-    .attach(DbConn::fairing())
+        .attach(DbConn::fairing())
         .attach(cors)
         .mount("/", routes![options_preflight])
         .mount("/swagger-ui/", make_swagger_ui(&SwaggerUIConfig {
@@ -47,10 +47,10 @@ async fn rocket() -> _ {
         .register("/", catchers![not_found]);
 
     let openapi_settings = rocket_okapi::settings::OpenApiSettings::default();
-        mount_endpoints_and_merged_docs! {
-            rocket_builder, "/api".to_owned(), openapi_settings,
-            "/" => api::get_routes_and_docs(&openapi_settings)
-        };
+    mount_endpoints_and_merged_docs! {
+        rocket_builder, "/api".to_owned(), openapi_settings,
+        "/" => api::get_routes_and_docs(&openapi_settings)
+    };
 
     rocket_builder
 }

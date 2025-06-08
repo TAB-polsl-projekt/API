@@ -1,3 +1,4 @@
+use diesel::result::Error::NotFound;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
@@ -16,6 +17,7 @@ define_api_response!(pub enum Response {
 });
 
 define_api_response!(pub enum Error {
+    NotFound => (404, "User not found", String, ()),
     InternalServerError => (500, "TEST", String, (diesel::result::Error)),
 });
 
@@ -25,12 +27,20 @@ define_api_response!(pub enum Error {
 pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
 
-    let result: User = conn.run(move |c| {
+    let result = conn.run(move |c| {
         users::table
             .filter(users::user_id.eq(user_id))
             .select(users::all_columns)
             .first(c)
-    }).await?;
+    }).await;
 
-    Ok(Response::Ok(result))
+    let user = result.map_err(|e| {
+        if let NotFound = e {
+            Error::NotFound("".to_owned())
+        } else {
+            e.into()
+        }
+    })?;
+
+    Ok(Response::Ok(user))
 }
