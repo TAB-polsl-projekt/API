@@ -17,6 +17,6 @@ define_api_response!(pub enum Error {
 /// Test
 #[openapi(tag = "Auth", operation_id = "postAuth")]
 #[post("/auth")]
-pub async fn endpoint(conn: crate::db::DbConn) -> Result<Response, Error> {
+pub async fn endpoint(_conn: crate::db::DbConn) -> Result<Response, Error> {
     todo!()
 }

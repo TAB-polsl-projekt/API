@@ -24,15 +24,8 @@ pub struct Response {
     assignments: Vec<Assignment>,
 }
 
-#[openapi(tag = "Account")]
-#[put("/subjects/<subject_id>", data = "<update>")]
-pub async fn endpoint(subject_id: String, update: Json<SubjectUpdate>, conn: crate::db::DbConn, session: Session) -> Result<(), BadRequest<Json<Error>>> {
-    let update = update.0;
-    let user_id = session.user_id;
-
-    conn.run(move |c| -> Result<_, Error> {
-        todo!()
-    })
-    .await
-    .map_err(|e| BadRequest(Json(e)))
+#[openapi(tag = "Subjects", operation_id = "putSubject")]
+#[put("/subjects/<_subject_id>", data = "<_update>")]
+pub async fn endpoint(_subject_id: String, _update: Json<SubjectUpdate>, _conn: crate::db::DbConn, _session: Session) -> Result<(), BadRequest<Json<Error>>> {
+    todo!()
 }
