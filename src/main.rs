@@ -27,6 +27,7 @@ async fn rocket() -> _ {
 
     let cors = CorsOptions::default()
         .allowed_origins(AllowedOrigins::all())
+        .allow_credentials(true)
         .allowed_methods(
             vec![Method::Post, Method::Options]
                 .into_iter()

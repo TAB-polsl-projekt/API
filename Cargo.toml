@@ -21,6 +21,7 @@ rocket_cors = "0.6.0"
 rocket_okapi = { version = "0.9.0", features = ["swagger", "uuid", "rocket_sync_db_pools", "rapidoc", "rocket_db_pools", "rocket_dyn_templates"] }
 rocket_okapi_codegen = "0.9.0"
 rocket_sync_db_pools = { version = "0.1.0", features = ["diesel_sqlite_pool"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
 schemars = { version = "0.8.22", features = ["chrono"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_bytes = "0.11.17"
@@ -29,4 +30,4 @@ serde_with = { version = "3.12.0", features = ["chrono"] }
 thiserror = "2.0.12"
 tokio = "1.45.0"
 tokio-stream = "0.1.17"
-uuid = { version = "1.17.0", features = ["v4", "v8"] }
+uuid = { version = "1.17.0", features = ["v4", "v8"] } 

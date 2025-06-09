@@ -23,7 +23,7 @@ define_api_response!(pub enum Error {
 #[get("/assignments/<assignment_id>")]
 pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
-    
+
     let result = conn.run(move |c| {
         assignments::table
             .inner_join(user_solution_assignments::table.on(user_solution_assignments::assignment_id.eq(assignments::assignment_id)))
