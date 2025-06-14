@@ -14,6 +14,11 @@ pub mod subject_get;
 pub mod subject_put;
 pub mod subjects_get;
 pub mod subjects_post;
+pub mod users_get;
+pub mod assignments_get;
+pub mod get_solutions;
+pub mod subjects_delete;
+pub mod assignment_delete;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) {
     // Start with an empty vector for routes and an initial empty OpenAPI object.
@@ -32,6 +37,12 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     all_routes_and_docs.push(assignment_put::get_routes_and_docs(settings));
     all_routes_and_docs.push(auth_delete::get_routes_and_docs(settings));
     all_routes_and_docs.push(auth_post::get_routes_and_docs(settings));
+    all_routes_and_docs.push(users_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignments_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(get_solutions::get_routes_and_docs(settings));
+    all_routes_and_docs.push(subjects_post::get_routes_and_docs(settings));
+    all_routes_and_docs.push(subjects_delete::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignment_delete::get_routes_and_docs(settings));
 
     let (all_routes, all_spec) = all_routes_and_docs.into_iter()
         .fold((Vec::new(), Vec::new()), |(mut routes, mut specs), it| {

@@ -59,7 +59,7 @@ pub struct AssignmentUpdate {
     pub description: Option<String>
 }
 
-#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
 #[diesel(table_name = subjects)]
 pub struct Subject {
     pub subject_id: String,

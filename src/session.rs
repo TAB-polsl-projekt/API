@@ -3,11 +3,12 @@ use okapi::{openapi3::{Parameter, RefOr, Response, Responses}, Map};
 use rocket::{http::Status, outcome::Outcome, request::{self, FromRequest, Request}};
 use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, RequestHeaderInput}};
 
-use crate::{db::DbConn, dbmodels::SessionRefreshKeys, dbschema::session_refresh_keys};
+use crate::{db::DbConn, dbmodels::SessionRefreshKeys, dbschema::{session_refresh_keys, users}};
 
 pub struct Session {
     pub user_id: String,
-    pub session_id: String
+    pub session_id: String,
+    pub is_admin: bool
 }
 
 #[rocket::async_trait]
@@ -41,14 +42,22 @@ impl<'r> FromRequest<'r> for Session {
             }
         };
 
-        // TODO: Check if valid
         let session_id = srk.refresh_key_id;
-        let user_id = srk.user_id;
+        let user_id = srk.user_id.clone();
+
+        let is_admin = db.run(move |c| {
+            users::table
+                .filter(users::user_id.eq(srk.user_id))
+                .select(users::is_admin)
+                .first(c)
+        }).await
+        .unwrap_or(false);
 
         Outcome::Success(
             Session {
                 session_id,
                 user_id,
+                is_admin
             }
         )
     }

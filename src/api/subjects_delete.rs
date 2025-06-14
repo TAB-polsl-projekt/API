@@ -1,5 +1,5 @@
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::post;
+use rocket::{delete, post};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
@@ -26,20 +26,16 @@ define_api_response!(pub enum Error {
     InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
-#[openapi(tag = "Subjects", operation_id = "postSubjects")]
-#[post("/subjects", data = "<subject>")]
-pub async fn endpoint(subject: Json<Subject>, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
-    let mut subject = subject.0;
-
+#[openapi(tag = "Subjects", operation_id = "deleteSubjects")]
+#[delete("/subjects/<subject_id>")]
+pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     if !session.is_admin {
         return Err(Error::Unauthorized(()));
     }
 
-    subject.subject_id = Uuid::new_v4().to_string();
-
     let _result = conn.run(move |c| {
-        diesel::insert_into(subjects::table)
-            .values(subject)
+        diesel::delete(subjects::table)
+            .filter(subjects::subject_id.eq(subject_id))
             .execute(c)
     })
     .await?;
