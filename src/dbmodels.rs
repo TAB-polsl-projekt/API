@@ -3,7 +3,7 @@ use diesel::{prelude::{Insertable, Queryable}, AsChangeset};
 use schemars::JsonSchema;
 use serde::{Serialize};
 
-use crate::dbschema::{assignments, solution, subjects, users};
+use crate::dbschema::{assignments, roles, solution, subjects, user_subjects, users};
 
 use serde::{Deserialize, Deserializer};
 
@@ -106,4 +106,21 @@ pub struct SessionRefreshKeys {
     pub expiration_time: NaiveDateTime,
     pub refresh_count: i32,
     pub refresh_limit: i32,
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize, Insertable, JsonSchema)]
+#[diesel(table_name = roles)]
+pub struct Role {
+    pub role_id: String,
+    pub name: String,
+    pub permissions: i32
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize, Insertable, JsonSchema)]
+#[diesel(table_name = user_subjects)]
+pub struct UserSubjects {
+    pub user_id: String,
+    pub subject_id: String,
+    pub role_id: String,
+    pub grade: Option<f64>
 }
