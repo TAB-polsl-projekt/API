@@ -1,3 +1,4 @@
+use diesel::result::DatabaseErrorKind;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::post;
 use rocket::{put, serde::json::Json};
@@ -27,8 +28,8 @@ define_api_response!(pub enum Response {
 
 define_api_response!(pub enum Error {
     Unauthorized => (401, "User is not admin", (), ()),
-    Conflict => (409, "Record already exists", (), (diesel::result::Error)),
-    //InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    Conflict => (409, "Record already exists", (), ()),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
 #[openapi(tag = "Subjects", operation_id = "postRole")]
@@ -54,7 +55,20 @@ pub async fn endpoint(data: Json<RequestData>, conn: crate::db::DbConn, session:
         diesel::insert_into(user_subjects::table)
             .values(us)
             .execute(c)
-    }).await?;
+    }).await;
+
+    println!("{:?}", result);
+
+    let _ = match result {
+        Ok(val) => val,
+        Err(err) => match err {
+            diesel::result::Error::DatabaseError(kind, _) => match kind {
+                DatabaseErrorKind::UniqueViolation => return Err(Error::Conflict(())),
+                _ => return Err(Error::InternalServerError(()))
+            }
+            _ => return Err(Error::InternalServerError(())),
+        }
+    };
 
     Ok(Response::Ok(()))
 }

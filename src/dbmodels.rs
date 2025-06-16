@@ -62,6 +62,7 @@ pub struct AssignmentUpdate {
 #[derive(Debug, Queryable, Serialize, Deserialize, JsonSchema, Insertable)]
 #[diesel(table_name = subjects)]
 pub struct Subject {
+    #[serde(skip)]
     pub subject_id: String,
     pub subject_name: Option<String>,
     pub editor_role_id: String
