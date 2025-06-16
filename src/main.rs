@@ -29,7 +29,7 @@ async fn rocket() -> _ {
         .allowed_origins(AllowedOrigins::all())
         .allow_credentials(true)
         .allowed_methods(
-            vec![Method::Post, Method::Options]
+            vec![Method::Post, Method::Get, Method::Put, Method::Delete, Method::Options]
                 .into_iter()
                 .map(From::from)
                 .collect(),

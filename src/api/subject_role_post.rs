@@ -27,7 +27,8 @@ define_api_response!(pub enum Response {
 
 define_api_response!(pub enum Error {
     Unauthorized => (401, "User is not admin", (), ()),
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    Conflict => (409, "Record already exists", (), (diesel::result::Error)),
+    //InternalServerError => (500, "TEST", String, (diesel::result::Error)),
 });
 
 #[openapi(tag = "Subjects", operation_id = "postRole")]
@@ -49,7 +50,7 @@ pub async fn endpoint(data: Json<RequestData>, conn: crate::db::DbConn, session:
         grade: None
     };
     
-    let _ = conn.run(move |c|{
+    let result = conn.run(move |c|{
         diesel::insert_into(user_subjects::table)
             .values(us)
             .execute(c)
