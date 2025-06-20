@@ -1,3 +1,4 @@
+use diesel::dsl::{exists, not};
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
@@ -21,19 +22,23 @@ define_api_response!(pub enum Error {
 });
 
 #[openapi(tag = "Account")]
-#[get("/subjects/<subject_id>/users/enrolled")]
+#[get("/subjects/<subject_id>/users/not-enrolled")]
 pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     if !session.is_admin {
         return Err(Error::Unauthorized(()));
     }
     
     let result = conn.run(move |c| {
-        subjects::table
-            .inner_join(user_subjects::table.on(subjects::subject_id.eq(user_subjects::subject_id)))
-            .inner_join(users::table.on(users::user_id.eq(user_subjects::user_id)))
-            .filter(subjects::subject_id.eq(subject_id))
+        users::table
+            .filter(not(
+                exists(
+                    user_subjects::table
+                        .filter(user_subjects::user_id.eq(users::user_id))
+                        .filter(user_subjects::subject_id.eq(subject_id))
+                )
+            ))
             .select(users::all_columns)
-            .get_results(c)
+            .get_results::<User>(c)
     }).await?;
 
     Ok(Response::Ok(result))

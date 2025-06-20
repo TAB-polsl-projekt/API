@@ -3,7 +3,7 @@ use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::dbmodels::{Assignment, User};
-use crate::dbschema::{assignments, subjects, user_solution_assignments, user_subjects, users};
+use crate::dbschema::{assignments, user_solution_assignments, users};
 use crate::define_api_response;
 use crate::session::Session;
 
@@ -21,18 +21,14 @@ define_api_response!(pub enum Error {
 });
 
 #[openapi(tag = "Account")]
-#[get("/subjects/<subject_id>/users/enrolled")]
-pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
+#[get("/users")]
+pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     if !session.is_admin {
         return Err(Error::Unauthorized(()));
     }
     
     let result = conn.run(move |c| {
-        subjects::table
-            .inner_join(user_subjects::table.on(subjects::subject_id.eq(user_subjects::subject_id)))
-            .inner_join(users::table.on(users::user_id.eq(user_subjects::user_id)))
-            .filter(subjects::subject_id.eq(subject_id))
-            .select(users::all_columns)
+        users::table
             .get_results(c)
     }).await?;
 
