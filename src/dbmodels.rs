@@ -3,7 +3,7 @@ use diesel::{prelude::{Insertable, Queryable}, AsChangeset};
 use schemars::JsonSchema;
 use serde::{Serialize};
 
-use crate::dbschema::{assignments, roles, solution, subjects, user_subjects, users};
+use crate::dbschema::{assignments, roles, solution, subjects, user_solution_assignments, user_subjects, users};
 
 use serde::{Deserialize, Deserializer};
 
@@ -124,4 +124,12 @@ pub struct UserSubjects {
     pub subject_id: String,
     pub role_id: String,
     pub grade: Option<f64>
+}
+
+#[derive(Debug, Queryable, Serialize, Deserialize, Insertable, JsonSchema)]
+#[diesel(table_name = user_solution_assignments)]
+pub struct UserAssignmentSolution {
+    pub user_id: String,
+    pub assignment_id: String,
+    pub solution_id: String
 }
