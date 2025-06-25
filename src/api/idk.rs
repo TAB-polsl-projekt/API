@@ -18,7 +18,8 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
         create_assignment,
         delete_assignment,
         get_user_solution,
-        update_user_solution
+        update_user_solution,
+        get_subject_assignment
     ]
 }
 
@@ -190,4 +191,20 @@ pub async fn update_user_solution(user_id: String, assignment_id: String, body: 
         return Err(Error::NotFound(()));
     }
     Ok(Response::Ok(()))
+}
+
+#[openapi(tag = "Subject")]
+#[get("/subjects/<subject_id>/assignment")]
+pub async fn get_subject_assignment(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Vec<crate::dbmodels::Assignment>>, Error> {
+    if !session.is_admin {
+        return Err(Error::Unauthorized(()));
+    }
+    let users = conn.run(move |c| {
+        subjects::table
+            .inner_join(assignments::table.on(assignments::subject_id.eq(subjects::subject_id)))
+            .filter(subjects::subject_id.eq(subject_id))
+            .select(assignments::all_columns)
+            .get_results(c)
+    }).await?;
+    Ok(Json(users))
 }
