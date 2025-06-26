@@ -194,7 +194,7 @@ pub async fn update_user_solution(user_id: String, assignment_id: String, body: 
 }
 
 #[openapi(tag = "Subject")]
-#[get("/subjects/<subject_id>/assignment")]
+#[get("/subjects/<subject_id>/assignments")]
 pub async fn get_subject_assignment(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Json<Vec<crate::dbmodels::Assignment>>, Error> {
     if !session.is_admin {
         return Err(Error::Unauthorized(()));
