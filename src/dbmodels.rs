@@ -79,6 +79,7 @@ pub struct SubjectRole {
 #[diesel(primary_key(subject_id))]
 #[diesel(table_name = subjects)]
 pub struct Subject {
+    #[serde(skip_deserializing)]
     pub subject_id: String,
     pub subject_name: String,
 }

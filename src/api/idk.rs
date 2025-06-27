@@ -5,6 +5,7 @@ use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, s
 use schemars::JsonSchema;
 use uuid::Uuid;
 
+use crate::admin_session::AdminSession;
 use crate::dbmodels::{Assignment, Solution, User};
 use crate::schema::{
     assignments,
@@ -78,11 +79,8 @@ pub async fn enroll_user(
     subject_id: String,
     user_id: String,
     conn: crate::db::DbConn,
-    session: Session,
+    _session: AdminSession,
 ) -> Result<Response, Error> {
-    if !session.is_admin {
-        return Err(Error::Unauthorized(()));
-    }
     // Assign 'student' role to user
     conn.run(move |c| {
         insert_into(user_role::table)
@@ -92,7 +90,7 @@ pub async fn enroll_user(
             ))
             .execute(c)
     })
-    .await?;
+    .await.unwrap();
     Ok(Response::Created(()))
 }
 
@@ -175,11 +173,8 @@ pub async fn delete_assignment(
     subject_id: String,
     assignment_id: String,
     conn: crate::db::DbConn,
-    session: Session,
+    _session: AdminSession,
 ) -> Result<Response, Error> {
-    if !session.is_admin {
-        return Err(Error::Unauthorized(()));
-    }
     let count = conn
         .run(move |c| {
             delete(
@@ -191,7 +186,7 @@ pub async fn delete_assignment(
             )
             .execute(c)
         })
-        .await?;
+        .await.unwrap();
     if count == 0 {
         return Err(Error::NotFound(()));
     }

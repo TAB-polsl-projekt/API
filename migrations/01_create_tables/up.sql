@@ -20,16 +20,16 @@ CREATE TABLE user_role (
   role_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
   PRIMARY KEY (role_id, user_id),
-  FOREIGN KEY (role_id) REFERENCES roles(role_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id)
+  FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE subject_role (
   subject_id TEXT NOT NULL,
   role_id TEXT NOT NULL,
   PRIMARY KEY (subject_id, role_id),
-  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id),
-  FOREIGN KEY (role_id) REFERENCES roles(role_id)
+  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE,
+  FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
 
 CREATE TABLE assignments (
@@ -37,8 +37,8 @@ CREATE TABLE assignments (
   subject_id TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  accepted_mime_types TEXT NOT NULL, -- Store JSON or comma-separated values
-  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
+  accepted_mime_types TEXT NOT NULL,
+  FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE
 );
 
 CREATE TABLE solutions (
@@ -52,22 +52,22 @@ CREATE TABLE solutions (
   mime_type TEXT NOT NULL,
   assignment_id TEXT NOT NULL,
   FOREIGN KEY (reviewed_by) REFERENCES users(user_id),
-  FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
+  FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_solution (
   user_id TEXT NOT NULL,
   solution_id TEXT NOT NULL,
   PRIMARY KEY (user_id, solution_id),
-  FOREIGN KEY (user_id) REFERENCES users(user_id),
-  FOREIGN KEY (solution_id) REFERENCES solutions(solution_id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (solution_id) REFERENCES solutions(solution_id) ON DELETE CASCADE
 );
 
 CREATE TABLE session_ids (
   refresh_key_id TEXT NOT NULL PRIMARY KEY,
   user_id TEXT NOT NULL,
   expiration_time TIMESTAMP NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(user_id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE logins (
@@ -75,5 +75,5 @@ CREATE TABLE logins (
   user_id TEXT NOT NULL,
   email TEXT NOT NULL,
   passwd_hash TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(user_id)
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
