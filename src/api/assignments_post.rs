@@ -22,7 +22,7 @@ define_api_response!(pub enum Error {
 
 #[openapi(tag = "Assignments", operation_id = "postAssignment")]
 #[post("/assignments", data = "<assignment>")]
-pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, session: AdminSession) -> Result<Response, Error> {
+pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     let assignment = assignment.0;
 
     let _result = conn.run(move |c| {

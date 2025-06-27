@@ -1,9 +1,9 @@
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::dbmodels::{Solution};
-use crate::schema::{assignments, solution, user_solution_assignments};
+use crate::schema::{solutions, user_solution};
 use crate::define_api_response;
 use crate::session::Session;
 
@@ -25,13 +25,11 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
     let user_id = session.user_id;
 
     let result = conn.run(move |c| {
-        assignments::table
-            .inner_join(user_solution_assignments::table.on(user_solution_assignments::assignment_id.eq(assignments::assignment_id)))
-            .inner_join(solution::table.on(solution::solution_id.eq(user_solution_assignments::solution_id)))
-            .filter(user_solution_assignments::user_id.eq(user_id))
-            .filter(assignments::assignment_id.eq(assignment_id))
-            .order(solution::submission_date.desc())
-            .select(solution::all_columns)
+        solutions::table
+            .inner_join(user_solution::table.on(user_solution::solution_id.eq(solutions::solution_id)))
+            .filter(solutions::assignment_id.eq(assignment_id))
+            .filter(user_solution::user_id.eq(user_id))
+            .select(solutions::all_columns)
             .first(c)
     }).await?;
 

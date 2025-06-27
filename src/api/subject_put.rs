@@ -4,8 +4,8 @@ use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 
-use crate::dbmodels::{Assignment, SubjectUpdate};
-use crate::session::Session;
+use crate::admin_session::AdminSession;
+use crate::dbmodels::{Assignment};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -26,6 +26,6 @@ pub struct Response {
 
 #[openapi(tag = "Subjects", operation_id = "putSubject")]
 #[put("/subjects/<_subject_id>", data = "<_update>")]
-pub async fn endpoint(_subject_id: String, _update: Json<SubjectUpdate>, _conn: crate::db::DbConn, _session: Session) -> Result<(), BadRequest<Json<Error>>> {
+pub async fn endpoint(_subject_id: String, _update: String, _conn: crate::db::DbConn, _session: AdminSession) -> Result<(), BadRequest<Json<Error>>> {
     todo!()
 }

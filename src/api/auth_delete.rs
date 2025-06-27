@@ -1,8 +1,8 @@
 use diesel::{ExpressionMethods, RunQueryDsl};
-use rocket::{delete, serde::json::Json};
+use rocket::delete;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
-use crate::schema::{session_refresh_keys};
+use crate::schema::{session_ids};
 use crate::{define_api_response};
 use crate::session::Session;
 
@@ -25,8 +25,8 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
     let session_id = session.session_id;
 
     let _result = conn.run(move |c| {
-        diesel::delete(session_refresh_keys::table)
-            .filter(session_refresh_keys::refresh_key_id.eq(session_id))
+        diesel::delete(session_ids::table)
+            .filter(session_ids::refresh_key_id.eq(session_id))
             .execute(c)
     }).await?;
 

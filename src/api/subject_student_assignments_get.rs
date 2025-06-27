@@ -2,33 +2,51 @@ use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
+use crate::schema::{assignments, subjects, subject_role, user_role};
+use crate::define_api_response;
 use crate::admin_session::AdminSession;
 use crate::dbmodels::Assignment;
-use crate::schema::{assignments, subjects, user_subject};
-use crate::define_api_response;
+use diesel::BoolExpressionMethods;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
-    openapi_get_routes_spec![settings: endpoint]
+    openapi_get_routes_spec![settings: student_assignments]
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "Returns user id and solution data", Vec<(String, Assignment)>, ()),
+    Ok => (200, "Returns student assignments", Vec<(String, Assignment)>, ()),
 });
 
 define_api_response!(pub enum Error {
-    InternalServerError => (401, "TEST", (), (diesel::result::Error)),
+    InternalServerError => (500, "Internal Server Error", (), (diesel::result::Error)),
 });
 
-#[openapi(tag = "Subjects", operation_id = "aaaa")]
+#[openapi(tag = "Subjects", operation_id = "student_assignments")]
 #[get("/subjects/<subject_id>/student-assignments")]
-pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
-    let result = conn.run(move |c| {
+pub async fn student_assignments(
+    subject_id: String,
+    conn: crate::db::DbConn,
+    _session: AdminSession
+) -> Result<Response, Error> {
+    let data = conn.run(move |c| {
+        // Join subjects -> assignments for this subject
+        // Then find all users with 'student' role for the subject
         subjects::table
-            .inner_join(assignments::table.on(assignments::subject_id.eq(subject_id)))
-            .inner_join(user_subject::table.on(user_subject::subject_id.eq(subjects::subject_id)))
-            .select((user_subject::user_id, assignments::all_columns))
-            .get_results(c)
+            .filter(subjects::subject_id.eq(&subject_id))
+            .inner_join(assignments::table.on(assignments::subject_id.eq(subjects::subject_id)))
+            .inner_join(
+                subject_role::table.on(
+                    subject_role::subject_id.eq(subjects::subject_id)
+                    .and(subject_role::role_id.eq("student"))
+                )
+            )
+            .inner_join(
+                user_role::table.on(
+                    user_role::role_id.eq(subject_role::role_id)
+                )
+            )
+            .select((user_role::user_id, assignments::all_columns))
+            .get_results::<(String, Assignment)>(c)
     }).await?;
 
-    Ok(Response::Ok(result))
+    Ok(Response::Ok(data))
 }

@@ -1,11 +1,11 @@
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use diesel::RunQueryDsl;
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
-use crate::dbmodels::{Assignment, User};
-use crate::schema::{assignments, user_solution_assignments, users};
+use crate::admin_session::AdminSession;
+use crate::dbmodels::User;
 use crate::define_api_response;
-use crate::session::Session;
+use crate::schema::users;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -22,11 +22,7 @@ define_api_response!(pub enum Error {
 
 #[openapi(tag = "Account")]
 #[get("/users")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
-    if !session.is_admin {
-        return Err(Error::Unauthorized(()));
-    }
-    
+pub async fn endpoint(conn: crate::db::DbConn, session: AdminSession) -> Result<Response, Error> {
     let result = conn.run(move |c| {
         users::table
             .get_results(c)

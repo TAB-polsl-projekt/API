@@ -1,9 +1,10 @@
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use diesel::dsl::exists;
+use diesel::{select, BelongingToDsl, ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
-use crate::dbmodels::Assignment;
-use crate::schema::{assignments};
+use crate::dbmodels::{Assignment, Subject, User, UserRole};
+use crate::schema::{assignments, roles, subject_role, subjects, user_role, users};
 use crate::define_api_response;
 use crate::session::Session;
 
@@ -16,6 +17,7 @@ define_api_response!(pub enum Response {
 });
 
 define_api_response!(pub enum Error {
+    Unauthorized => (401, "User does not have access to the asignment", (), ()),
     InternalServerError => (500, "TEST", String, (diesel::result::Error)),
 });
 
@@ -25,12 +27,28 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
     let user_id = session.user_id;
     
     let result = conn.run(move |c| {
-        assignments::table
-            .inner_join(user_solution_assignments::table.on(user_solution_assignments::assignment_id.eq(assignments::assignment_id)))
-            .filter(user_solution_assignments::user_id.eq(user_id))
-            .filter(assignments::assignment_id.eq(assignment_id))
-            .select(assignments::all_columns)
-            .first(c)
+        let user: User = users::table.find(user_id).first(c)?;
+
+        let assignment: Assignment = assignments::table.find(assignment_id).first(c)?;
+
+        let subject: Subject = subjects::table.find(&assignment.subject_id).first(c)?;
+
+        let role_ids: Vec<String> = UserRole::belonging_to(&user)
+            .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
+            .select(roles::role_id)
+            .load(c)?;
+
+        let does_user_have_access: bool = select(exists(
+            subject_role::table
+                .filter(subject_role::subject_id.eq(subject.subject_id))
+                .filter(subject_role::role_id.eq_any(role_ids))
+        )).get_result(c)?;
+
+        if !does_user_have_access {
+            return Err(Error::Unauthorized(()));
+        }
+
+        Ok(assignment)
     }).await?;
 
     Ok(Response::Ok(result))

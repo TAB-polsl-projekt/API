@@ -49,7 +49,8 @@ pub struct SessionId {
     pub expiration_time: NaiveDateTime,
 }
 
-#[derive(Debug, JsonSchema, Serialize, Deserialize, Queryable, Insertable, Identifiable)]
+#[derive(Debug, JsonSchema, Serialize, Deserialize, Queryable, Insertable, Identifiable, Associations)]
+#[diesel(belongs_to(Assignment))]
 #[diesel(primary_key(solution_id))]
 #[diesel(table_name = solutions)]
 pub struct Solution {

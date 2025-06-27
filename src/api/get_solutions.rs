@@ -1,13 +1,11 @@
-use diesel::dsl::exists;
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use diesel::{RunQueryDsl};
 use rocket::get;
-use rocket::{post, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
-use crate::dbmodels::{Assignment, Solution};
-use crate::schema::{assignments, roles, solution, user_subjects};
+use crate::admin_session::AdminSession;
+use crate::dbmodels::Solution;
 use crate::define_api_response;
-use crate::session::Session;
+use crate::schema::solutions;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -24,15 +22,9 @@ define_api_response!(pub enum Error {
 
 #[openapi(tag = "Solutions", operation_id = "getSolutions")]
 #[get("/solutions")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
-    let is_admin = session.is_admin;
-
-    if !is_admin {
-        return Err(Error::Unauthorized(()));
-    }
-
+pub async fn endpoint(conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     let result = conn.run(move |c| {
-        solution::table
+        solutions::table
             .get_results(c)
     }).await?;
 
