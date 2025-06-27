@@ -1,6 +1,6 @@
 use diesel::result::Error::NotFound;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::dbmodels::User;

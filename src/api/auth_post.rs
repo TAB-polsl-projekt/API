@@ -1,4 +1,4 @@
-use rocket::{post, serde::json::Json};
+use rocket::post;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::{define_api_response};

@@ -1,5 +1,5 @@
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::schema::{assignments, subjects, subject_role, user_role};

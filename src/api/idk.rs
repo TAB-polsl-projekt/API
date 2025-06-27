@@ -8,7 +8,6 @@ use uuid::Uuid;
 use crate::dbmodels::{Assignment, Solution, User};
 use crate::schema::{
     assignments,
-    roles,
     subjects,
     user_role,
     subject_role,

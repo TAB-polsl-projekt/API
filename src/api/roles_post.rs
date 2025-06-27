@@ -1,6 +1,6 @@
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::RunQueryDsl;
 use rocket::post;
-use rocket::{put, serde::json::Json};
+use rocket::serde::json::Json;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::dbmodels::Role;
