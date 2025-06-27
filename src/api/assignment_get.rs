@@ -3,7 +3,7 @@ use rocket::{get, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::dbmodels::Assignment;
-use crate::dbschema::{assignments, user_solution_assignments};
+use crate::schema::{assignments};
 use crate::define_api_response;
 use crate::session::Session;
 

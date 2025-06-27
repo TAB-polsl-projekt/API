@@ -3,7 +3,7 @@ use okapi::{openapi3::{Parameter, RefOr, Response, Responses}, Map};
 use rocket::{http::Status, outcome::Outcome, request::{self, FromRequest, Request}};
 use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, RequestHeaderInput}};
 
-use crate::{db::DbConn, dbmodels::SessionRefreshKeys, dbschema::{session_refresh_keys, users}};
+use crate::{db::DbConn, dbmodels::SessionId, schema::{session_ids, users}};
 
 pub struct Session {
     pub user_id: String,
@@ -28,13 +28,13 @@ impl<'r> FromRequest<'r> for Session {
         };
 
         let srk_result = db.run(move |c| {
-            session_refresh_keys::table
-                .filter(session_refresh_keys::refresh_key_id.eq(&session_id))
-                .select(session_refresh_keys::all_columns)
+            session_ids::table
+                .filter(session_ids::refresh_key_id.eq(&session_id))
+                .select(session_ids::all_columns)
                 .first(c)
         }).await;
 
-        let srk: SessionRefreshKeys = match srk_result {
+        let srk: SessionId = match srk_result {
             Ok(srk) => srk,
             Err(err) => match err {
                 diesel::result::Error::NotFound => return Outcome::Error((Status::Unauthorized, ())),

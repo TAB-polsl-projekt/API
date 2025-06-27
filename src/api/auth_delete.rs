@@ -2,7 +2,7 @@ use diesel::{ExpressionMethods, RunQueryDsl};
 use rocket::{delete, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
-use crate::dbschema::{session_refresh_keys};
+use crate::schema::{session_refresh_keys};
 use crate::{define_api_response};
 use crate::session::Session;
 

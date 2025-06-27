@@ -6,7 +6,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::dbmodels::{Role, UserSubjects};
-use crate::dbschema::{roles, user_subjects};
+use crate::schema::{roles, user_subjects};
 use crate::define_api_response;
 use crate::session::Session;
 

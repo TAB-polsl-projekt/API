@@ -1,11 +1,11 @@
-use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rocket::{get, serde::json::Json};
+use diesel::{BelongingToDsl, ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use serde::{Deserialize, Serialize};
 
-use crate::dbmodels::Subject;
-use crate::dbschema::{subjects, user_subjects};
+use crate::dbmodels::{Role, Subject, SubjectRole, User, UserRole};
+use crate::schema::{roles, subject_role, subjects, user_role, users};
 use crate::define_api_response;
 use crate::session::Session;
 
@@ -37,16 +37,21 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
 
         let subjects: Vec<Subject> = {
             if !is_admin {
-                subjects::table
-                .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
-                .filter(user_subjects::user_id.eq(user_id))
-                .select(subjects::all_columns)
-                .get_results(c)?
+                let user: User = users::table.find(user_id).first(c)?;
+
+                let roles: Vec<Role> = UserRole::belonging_to(&user)
+                    .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
+                    .select(roles::all_columns)
+                    .load(c)?;
+
+                let subjects = SubjectRole::belonging_to(&roles)
+                    .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
+                    .select((subjects::subject_id, subjects::subject_name))
+                    .load(c)?;
+
+                subjects
             } else {
-                subjects::table
-                .inner_join(user_subjects::table.on(user_subjects::subject_id.eq(subjects::subject_id)))
-                .select(subjects::all_columns)
-                .get_results(c)?
+                subjects::table.load(c)?
             }
         };
 
@@ -54,7 +59,7 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
             .iter()
             .map(|x| {
                     let subject_id = x.subject_id.clone();
-                    let subject_name = x.subject_name.clone().unwrap_or("".to_string());
+                    let subject_name = x.subject_name.clone();
 
                     ResponseData {
                         subject_id,

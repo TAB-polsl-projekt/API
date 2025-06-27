@@ -35,7 +35,7 @@ macro_rules! define_api_response {
                 match self {
                     $(
                         $name::$variant(body) => {
-                            let body = Json(body);
+                            let body = ::rocket::serde::json::Json(body);
                             ::rocket::response::Response::build_from(body.respond_to(_req)?)
                                 .status(::rocket::http::Status::new($code))
                                 .ok()

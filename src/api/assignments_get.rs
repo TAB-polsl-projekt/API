@@ -1,13 +1,11 @@
-use diesel::dsl::exists;
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use diesel::RunQueryDsl;
 use rocket::get;
-use rocket::{post, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
+use crate::admin_session::AdminSession;
 use crate::dbmodels::Assignment;
-use crate::dbschema::{assignments, roles, user_subjects};
+use crate::schema::{assignments};
 use crate::define_api_response;
-use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -24,16 +22,9 @@ define_api_response!(pub enum Error {
 
 #[openapi(tag = "Assignments", operation_id = "getAssignments")]
 #[get("/assignments")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
-    let is_admin = session.is_admin;
-
-    if !is_admin {
-        return Err(Error::Unauthorized(()));
-    }
-
+pub async fn endpoint(conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     let result = conn.run(move |c| {
-        assignments::table
-            .get_results(c)
+        assignments::table.load(c)
     }).await?;
 
     Ok(Response::Ok(result))

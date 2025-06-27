@@ -9,9 +9,10 @@ pub mod session;
 use rocket_okapi::mount_endpoints_and_merged_docs;
 use rocket_okapi::swagger_ui::{make_swagger_ui, SwaggerUIConfig};
 
-pub mod dbschema;
+pub mod schema;
 pub mod dbmodels;
 pub mod db;
+pub mod admin_session;
 
 #[catch(404)]
 fn not_found(req: &Request) -> status::NotFound<String> {

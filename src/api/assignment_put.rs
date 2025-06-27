@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use rocket::response::status::BadRequest;
 
 use crate::dbmodels::AssignmentUpdate;
-use crate::dbschema::{assignments, subjects, user_subjects};
+use crate::schema::{assignments, subjects, user_subjects};
 use crate::session::Session;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {

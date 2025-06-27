@@ -6,7 +6,7 @@ use schemars::JsonSchema;
 use uuid::Uuid;
 
 use crate::dbmodels::{Assignment, Solution, UserAssignmentSolution};
-use crate::dbschema::{assignments, subjects, user_solution_assignments, user_subjects, users, solution};
+use crate::schema::{assignments, subjects, user_solution_assignments, user_subjects, users, solution};
 use crate::define_api_response;
 use crate::session::Session;
 
