@@ -45,7 +45,7 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
             .first(c)?;
 
         let assignment_query = Assignment::belonging_to(&subject)
-            .filter(assignments::assignment_id.eq(assignment_id));
+            .filter(assignments::assignment_id.eq(assignment_id.clone()));
 
         let user_has_access_to_assignments: bool = diesel::select(exists(assignment_query))
             .get_result(c)?;
