@@ -56,6 +56,7 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
 
         sln.solution_id = Uuid::new_v4().to_string();
         sln.submission_date = Utc::now().naive_utc();
+        sln.assignment_id = assignment_id;
 
         let _result = diesel::insert_into(solutions::table)
             .values(sln)

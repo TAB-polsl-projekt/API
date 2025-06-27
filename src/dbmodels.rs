@@ -55,13 +55,19 @@ pub struct SessionId {
 #[diesel(table_name = solutions)]
 pub struct Solution {
     pub solution_id: String,
+    #[serde(skip_deserializing)]
     pub grade: Option<f64>,
+    #[serde(skip_deserializing)]
     pub submission_date: NaiveDateTime,
     pub solution_data: Vec<u8>,
+    #[serde(skip_deserializing)]
     pub reviewed_by: Option<String>,
+    #[serde(skip_deserializing)]
     pub review_comment: Option<String>,
+    #[serde(skip_deserializing)]
     pub review_date: Option<NaiveDateTime>,
     pub mime_type: String,
+    #[serde(skip_deserializing)]
     pub assignment_id: String,
 }
 
