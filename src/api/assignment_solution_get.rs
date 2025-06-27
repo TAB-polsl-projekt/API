@@ -31,7 +31,7 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
             .filter(user_solution::user_id.eq(user_id))
             .select(solutions::all_columns)
             .first(c)
-    }).await?;
+    }).await.unwrap();
 
     Ok(Response::Ok(result))
 }

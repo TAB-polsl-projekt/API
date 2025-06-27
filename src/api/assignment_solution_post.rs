@@ -8,8 +8,8 @@ use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, s
 use crate::define_api_response;
 use crate::session::Session;
 
-use crate::dbmodels::{Assignment, Role, Solution, Subject, SubjectRole, User, UserRole};
-use crate::schema::{assignments, roles, solutions, subject_role, subjects, user_role, users};
+use crate::dbmodels::{Assignment, Role, Solution, Subject, SubjectRole, User, UserRole, UserSolution};
+use crate::schema::{assignments, roles, solutions, subject_role, subjects, user_role, user_solution, users};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -32,7 +32,7 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
 
     let result = conn.run(move |c| {
 
-        let user: User = users::table.find(user_id).first(c)?;
+        let user: User = users::table.find(user_id.clone()).first(c)?;
 
         let roles: Vec<Role> = UserRole::belonging_to(&user)
             .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
@@ -54,12 +54,18 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
             return Err(Error::Unauthorized(()));
         }
 
-        sln.solution_id = Uuid::new_v4().to_string();
+        let solution_id = Uuid::new_v4().to_string();
+        sln.solution_id = solution_id.clone();
         sln.submission_date = Utc::now().naive_utc();
         sln.assignment_id = assignment_id;
 
         let _result = diesel::insert_into(solutions::table)
             .values(sln)
+            .execute(c)?;
+
+        let user_solution = UserSolution { user_id, solution_id };
+        let _result = diesel::insert_into(user_solution::table)
+            .values(user_solution)
             .execute(c)?;
 
         Ok(())

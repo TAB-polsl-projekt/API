@@ -29,7 +29,7 @@ pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, _session: Adm
             .filter(subjects::subject_id.eq(subject_id))
             .select(solutions::all_columns)
             .get_results(c)
-    }).await?;
+    }).await.unwrap();
 
     Ok(Response::Ok(result))
 }
