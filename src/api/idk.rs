@@ -22,8 +22,6 @@ use crate::session::Session;
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings:
         get_not_enrolled,
-        enroll_user,
-        unenroll_user,
         create_assignment,
         delete_assignment,
         get_user_solution,
@@ -70,61 +68,6 @@ pub async fn get_not_enrolled(
         })
         .await?;
     Ok(Json(users_list))
-}
-
-// 7. POST /subjects/<subject_id>/users/<user_id>
-#[openapi(tag = "Subject")]
-#[post("/subjects/<subject_id>/users/<user_id>")]
-pub async fn enroll_user(
-    subject_id: String,
-    user_id: String,
-    conn: crate::db::DbConn,
-    _session: AdminSession,
-) -> Result<Response, Error> {
-    // Assign 'student' role to user
-    conn.run(move |c| {
-        insert_into(user_role::table)
-            .values((
-                user_role::user_id.eq(user_id.clone()),
-                user_role::role_id.eq("student"),
-            ))
-            .execute(c)
-    })
-    .await.unwrap();
-    Ok(Response::Created(()))
-}
-
-// 8. DELETE /subjects/<subject_id>/users/<user_id>
-#[openapi(tag = "Subject")]
-#[delete("/subjects/<subject_id>/users/<user_id>")]
-pub async fn unenroll_user(
-    subject_id: String,
-    user_id: String,
-    conn: crate::db::DbConn,
-    session: Session,
-) -> Result<Response, Error> {
-    if !session.is_admin {
-        return Err(Error::Unauthorized(()));
-    }
-    // Remove any user_role entries for roles associated with this subject
-    let count = conn
-        .run(move |c| {
-            delete(
-                user_role::table
-                    .filter(user_role::user_id.eq(user_id.clone()))
-                    .filter(exists(
-                        subject_role::table
-                            .filter(subject_role::role_id.eq(user_role::role_id))
-                            .filter(subject_role::subject_id.eq(&subject_id)),
-                    )),
-            )
-            .execute(c)
-        })
-        .await?;
-    if count == 0 {
-        return Err(Error::NotFound(()));
-    }
-    Ok(Response::Ok(()))
 }
 
 // 9. POST /subjects/<subject_id>/assignments
