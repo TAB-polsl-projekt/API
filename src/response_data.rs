@@ -21,13 +21,31 @@ macro_rules! define_response_data {
             }
 
             fn json_schema(r#gen: &mut SchemaGenerator) -> Schema {
-                #[derive(JsonSchema)]
-                #[allow(dead_code)]
-                struct Helper {
-                    $($field_vis $field_name : $field_ty),*
-                }
+                let mut obj = ::schemars::schema::ObjectValidation::default();
 
-                r#gen.subschema_for::<Helper>()
+                $(
+                    obj.properties.insert(
+                        stringify!($field_name).to_string(),
+                        r#gen.subschema_for::<$field_ty>(),
+                    );
+                )*
+
+                // Optional: add required field tracking
+                $(
+                    obj.required.insert(stringify!($field_name).to_string());
+                )*
+
+                let schema = ::schemars::schema::SchemaObject {
+                    instance_type: Some(::schemars::schema::SingleOrVec::Single(Box::new(::schemars::schema::InstanceType::Object))),
+                    object: Some(Box::new(obj)),
+                    metadata: Some(Box::new(::schemars::schema::Metadata {
+                        title: Some(Self::schema_name()),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                };
+
+                Schema::Object(schema)
             }
         }
     };
