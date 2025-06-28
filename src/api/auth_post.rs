@@ -6,7 +6,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{dbmodels::{Login, SessionId}, define_api_response, schema::{logins, session_ids}};
+use crate::{dbmodels::{Login, SessionId}, define_api_response, define_response_data, schema::{logins, session_ids}};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
     openapi_get_routes_spec![settings: endpoint]
@@ -20,15 +20,16 @@ define_api_response!(pub enum Error {
     InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
+define_response_data!(
+    pub struct ResponseData {
+        pub session_id: String
+    }
+);
+
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct LoginData {
     pub email: String,
     pub password_hash: String,
-}
-
-#[derive(Serialize, Deserialize, JsonSchema)]
-pub struct ResponseData {
-    pub session_id: String
 }
 
 /// Test
