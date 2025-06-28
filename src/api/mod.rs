@@ -27,6 +27,8 @@ pub mod subject_solutions_get;
 pub mod enrolled;
 pub mod idk;
 pub mod roles_get;
+pub mod user_roles_get;
+pub mod role_users_get;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) {
     // Start with an empty vector for routes and an initial empty OpenAPI object.
@@ -59,6 +61,8 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     all_routes_and_docs.push(enrolled::get_routes_and_docs(settings));
     all_routes_and_docs.push(idk::get_routes_and_docs(settings));
     all_routes_and_docs.push(roles_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(user_roles_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(role_users_get::get_routes_and_docs(settings));
 
     let (all_routes, all_spec) = all_routes_and_docs.into_iter()
         .fold((Vec::new(), Vec::new()), |(mut routes, mut specs), it| {
