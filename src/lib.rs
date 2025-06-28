@@ -3,5 +3,6 @@ pub mod db;
 pub mod schema;
 pub mod dbmodels;
 pub mod session;
+pub mod response_data;
 pub mod admin_session;
 #[macro_use] pub mod api_response;

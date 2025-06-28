@@ -2,11 +2,9 @@ use diesel::dsl::exists;
 use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
 use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
-use schemars::JsonSchema;
-use serde::Serialize;
 
 use crate::dbmodels::User;
-use crate::define_api_response;
+use crate::{define_api_response, define_response_data};
 use crate::schema::{user_role, users};
 use crate::session::Session;
 
@@ -23,12 +21,14 @@ define_api_response!(pub enum Error {
     InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
-#[derive(Debug, Serialize, JsonSchema)]
-pub struct ResponseData {
-    pub user_id: String,
-    pub full_name: String,
-    pub student_id: String,
-}
+define_response_data!(
+    pub struct ResponseData {
+        pub user_id: String,
+        pub full_name: String,
+        pub student_id: String,
+    }
+);
+
 
 #[openapi(tag = "Roles", operation_id = "getRoleUsers")]
 #[get("/roles/<role_id>/users")]

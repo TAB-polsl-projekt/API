@@ -13,6 +13,7 @@ pub mod schema;
 pub mod dbmodels;
 pub mod db;
 pub mod admin_session;
+pub mod response_data;
 
 #[catch(404)]
 fn not_found(req: &Request) -> status::NotFound<String> {
