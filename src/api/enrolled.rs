@@ -16,13 +16,12 @@ define_api_response!(pub enum Response {
 });
 
 define_api_response!(pub enum Error {
-    Unauthorized => (401, "TEST", (), ()),
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Account", operation_id = "getUsers")]
 #[get("/users")]
-pub async fn endpoint(conn: crate::db::DbConn, session: AdminSession) -> Result<Response, Error> {
+pub async fn endpoint(conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     let result = conn.run(move |c| {
         users::table
             .get_results(c)

@@ -11,11 +11,11 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "TEST", String, ()),
+    Ok => (200, "TEST", (), ()),
 });
 
 define_api_response!(pub enum Error {
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
 /// Test
@@ -30,5 +30,5 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
             .execute(c)
     }).await?;
 
-    Ok(Response::Ok("".to_owned()))
+    Ok(Response::Ok(()))
 }

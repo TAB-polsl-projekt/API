@@ -13,17 +13,22 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "Returns session id", String, ()),
+    Ok => (200, "Returns session id", ResponseData, ()),
 });
 
 define_api_response!(pub enum Error {
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct LoginData {
     pub email: String,
     pub password_hash: String,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+pub struct ResponseData {
+    pub session_id: String
 }
 
 /// Test
@@ -57,5 +62,5 @@ pub async fn endpoint(login_data: Json<LoginData>, conn: crate::db::DbConn) -> R
         Ok(refresh_key_id)
     }).await?;
 
-    Ok(Response::Ok(session_id))
+    Ok(Response::Ok(ResponseData { session_id }))
 }

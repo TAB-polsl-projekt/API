@@ -12,12 +12,11 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "", String, ()),
+    Ok => (200, "", (), ()),
 });
 
 define_api_response!(pub enum Error {
-    Unauthorized => (401, "User is not an admin", String, ()),
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
 #[openapi(tag = "Assignments", operation_id = "postAssignment")]
@@ -31,5 +30,5 @@ pub async fn endpoint(assignment: Json<Assignment>, conn: crate::db::DbConn, _se
             .execute(c)
     }).await?;
 
-    Ok(Response::Ok("".to_owned()))
+    Ok(Response::Ok(()))
 }

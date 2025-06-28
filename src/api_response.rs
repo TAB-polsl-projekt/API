@@ -35,10 +35,19 @@ macro_rules! define_api_response {
                 match self {
                     $(
                         $name::$variant(body) => {
-                            let body = ::rocket::serde::json::Json(body);
-                            ::rocket::response::Response::build_from(body.respond_to(_req)?)
+                            let mut response_builder = if ::std::any::TypeId::of::<$body>() != ::std::any::TypeId::of::<()>() {
+                                let body = ::rocket::serde::json::Json(body);
+
+                                ::rocket::response::Response::build_from(body.respond_to(_req)?)
+                            } else {
+                                ::rocket::response::Response::build()
+                            };
+
+                            let response = response_builder
                                 .status(::rocket::http::Status::new($code))
-                                .ok()
+                                .ok()?;
+                            
+                            Ok(response)
                         }
                     )*
                 }
@@ -57,19 +66,22 @@ macro_rules! define_api_response {
                     //type Inner = <$body as rocket_okapi::response::OpenApiResponder>::Inner;
                     let schema = _gen.json_schema::<$body>();
                     let mut content: ::rocket_okapi::okapi::schemars::Map<String, ::rocket_okapi::okapi::openapi3::MediaType> = Default::default();
-                    content.insert(
-                        "application/json".to_owned(),
-                        ::rocket_okapi::okapi::openapi3::MediaType {
-                            schema: schema.into(),
-                            example: None,
-                            examples: None,
-                            extensions: Default::default(),
-                            encoding: Default::default(),
-                        },
-                    );
+                    // Skip if type is ()
+                    if ::std::any::TypeId::of::<$body>() != ::std::any::TypeId::of::<()>() {
+                        content.insert(
+                            "application/json".to_owned(),
+                            ::rocket_okapi::okapi::openapi3::MediaType {
+                                schema: schema.into(),
+                                example: None,
+                                examples: None,
+                                extensions: Default::default(),
+                                encoding: Default::default(),
+                            },
+                        );
+                    }
                     responses.responses.insert(
                         $code.to_string(),
-                        okapi::openapi3::RefOr::Object(::rocket_okapi::okapi::openapi3::Response {
+                        ::rocket_okapi::okapi::openapi3::RefOr::Object(::rocket_okapi::okapi::openapi3::Response {
                             description: $desc.to_string(),
                             content,
                             ..Default::default()
