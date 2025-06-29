@@ -64,6 +64,7 @@ pub async fn get_not_enrolled(
                         .filter(subject_role::subject_id.eq(&subject_id)),
                 )))
                 .select(users::all_columns)
+                .distinct()
                 .get_results::<User>(c)
         })
         .await?;

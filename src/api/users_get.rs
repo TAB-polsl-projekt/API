@@ -34,6 +34,7 @@ pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, _session: Adm
         let users = UserRole::belonging_to(&roles)
             .inner_join(users::table.on(users::user_id.eq(user_role::user_id)))
             .select(users::all_columns)
+            .distinct()
             .load(c);
 
         users
