@@ -46,7 +46,7 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
 
                 let subjects = SubjectRole::belonging_to(&roles)
                     .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
-                    .select((subjects::subject_id, subjects::subject_name))
+                    .select(subjects::all_columns)
                     .load(c)?;
 
                 subjects

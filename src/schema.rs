@@ -42,6 +42,8 @@ diesel::table! {
         solution_data -> Binary,
         reviewed_by -> Nullable<Text>,
         review_comment -> Nullable<Text>,
+        student_comment -> Nullable<Text>,
+        exercise_date -> Nullable<Timestamp>,
         review_date -> Nullable<Timestamp>,
         mime_type -> Text,
         assignment_id -> Text,
@@ -59,6 +61,7 @@ diesel::table! {
     subjects (subject_id) {
         subject_id -> Text,
         subject_name -> Text,
+        editor_role_id -> Nullable<Text>,
     }
 }
 
@@ -93,6 +96,7 @@ diesel::joinable!(solutions -> assignments (assignment_id));
 diesel::joinable!(solutions -> users (reviewed_by));
 diesel::joinable!(subject_role -> roles (role_id));
 diesel::joinable!(subject_role -> subjects (subject_id));
+diesel::joinable!(subjects -> roles (editor_role_id));
 diesel::joinable!(user_role -> roles (role_id));
 diesel::joinable!(user_role -> users (user_id));
 diesel::joinable!(user_solution -> solutions (solution_id));

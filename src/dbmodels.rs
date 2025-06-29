@@ -65,6 +65,8 @@ pub struct Solution {
     pub reviewed_by: Option<String>,
     #[serde(skip_deserializing)]
     pub review_comment: Option<String>,
+    pub student_comment: Option<String>,
+    pub exercise_date: Option<NaiveDateTime>,
     #[serde(skip_deserializing)]
     pub review_date: Option<NaiveDateTime>,
     pub mime_type: String,
@@ -89,6 +91,7 @@ pub struct Subject {
     #[serde(skip_deserializing)]
     pub subject_id: String,
     pub subject_name: String,
+    pub editor_role_id: Option<String>,
 }
 
 #[derive(Debug, JsonSchema, Serialize, Deserialize, Queryable, Insertable, Identifiable, Associations)]
