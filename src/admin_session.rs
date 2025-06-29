@@ -4,6 +4,7 @@ use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, Reques
 
 use crate::session::Session;
 
+#[allow(dead_code)]
 pub struct AdminSession {
     session: Session
 }
@@ -21,7 +22,7 @@ impl<'r> FromRequest<'r> for AdminSession {
         };
 
         if !session.is_admin {
-            return Outcome::Error((Status::Unauthorized, ()));
+            return Outcome::Error((Status::Forbidden, ()));
         }
 
         let admin_session = AdminSession {session};
@@ -42,13 +43,12 @@ impl<'r> OpenApiFromRequest<'r> for AdminSession {
     fn get_responses(
         _gen: &mut OpenApiGenerator,
     ) -> rocket_okapi::Result<Responses> {
-        // Define possible responses: 401 Unauthorized, 500 Internal Server Error
-        let mut responses = Responses::default();
+        let mut responses = Session::get_responses(_gen)?;
 
         responses.responses.insert(
-            "401".to_owned(),
+            "403".to_owned(),
             RefOr::Object(Response {
-                description: "Unauthorized: currently logged-in user is not an admin".to_owned(),
+                description: "Forbidden: currently logged-in user is not an admin".to_owned(),
                 headers: Map::new(),
                 content: Map::new(),
                 links: Map::new(),

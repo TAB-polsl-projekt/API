@@ -1,5 +1,5 @@
 use diesel::{query_dsl::methods::{FilterDsl, SelectDsl}, ExpressionMethods, RunQueryDsl};
-use okapi::{openapi3::{Parameter, RefOr, Response, Responses}, Map};
+use okapi::{openapi3::{RefOr, Response, Responses}, Map};
 use rocket::{http::Status, outcome::Outcome, request::{self, FromRequest, Request}};
 use rocket_okapi::{r#gen::OpenApiGenerator, request::{OpenApiFromRequest, RequestHeaderInput}};
 
@@ -69,19 +69,7 @@ impl<'r> OpenApiFromRequest<'r> for Session {
         _name: String,
         _required: bool,
     ) -> rocket_okapi::Result<RequestHeaderInput> {
-        // Require a session_id cookie for authentication
-        let param = Parameter {
-            name: "session_id".to_owned(),
-            required: false,
-            location: "/".to_owned(),
-            description: Some("Session identifier cookie".to_owned()),
-            deprecated: false,
-            allow_empty_value: false,
-            extensions: Map::new(),
-            value: okapi::openapi3::ParameterValue::Content { content: Default::default() },
-        };
-        
-        Ok(RequestHeaderInput::Parameter(param))
+        Ok(RequestHeaderInput::None)
     }
 
     fn get_responses(

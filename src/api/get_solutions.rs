@@ -16,8 +16,7 @@ define_api_response!(pub enum Response {
 });
 
 define_api_response!(pub enum Error {
-    Unauthorized => (401, "User is not an admin", (), ()),
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    InternalServerError => (500, "TEST", (), (diesel::result::Error)),
 });
 
 #[openapi(tag = "Solutions", operation_id = "getSolutions")]
