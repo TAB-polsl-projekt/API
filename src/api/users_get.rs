@@ -20,7 +20,7 @@ define_api_response!(pub enum Error {
 });
 
 /// Gets all users enrolled in a subject
-#[openapi(tag = "Account", operation_id = "getUsersEnrolledInSubject")]
+#[openapi(tag = "Subjects", operation_id = "getUsersEnrolledInSubject")]
 #[get("/subjects/<subject_id>/users/enrolled")]
 pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     let result = conn.run(move |c| {

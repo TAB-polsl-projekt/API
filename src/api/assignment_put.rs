@@ -28,7 +28,7 @@ pub enum Error {
     Other(String)
 }
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Assignments")]
 #[put("/assignments/<assignment_id>", data = "<assignment_update>")]
 pub async fn endpoint(
     assignment_id: String,

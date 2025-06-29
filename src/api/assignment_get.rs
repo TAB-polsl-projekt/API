@@ -21,7 +21,7 @@ define_api_response!(pub enum Error {
     InternalServerError => (500, "TEST", String, (diesel::result::Error)),
 });
 
-#[openapi(tag = "Account")]
+#[openapi(tag = "Assignments")]
 #[get("/assignments/<assignment_id>")]
 pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;

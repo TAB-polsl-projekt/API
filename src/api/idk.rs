@@ -41,8 +41,7 @@ define_api_response!(pub enum Error {
     InternalServerError => (500, "Internal error", String, (diesel::result::Error)),
 });
 
-// 6. GET /subjects/<subject_id>/users/not-enrolled
-#[openapi(tag = "Subject")]
+#[openapi(tag = "Subjects")]
 #[get("/subjects/<subject_id>/users/not-enrolled")]
 pub async fn get_not_enrolled(
     subject_id: String,
@@ -79,7 +78,7 @@ pub struct CreateAssignmentRequest {
     pub accepted_mime_types: Option<String>,
 }
 
-#[openapi(tag = "Assignment")]
+#[openapi(tag = "Assignments")]
 #[post("/subjects/<subject_id>/assignments", format = "json", data = "<body>")]
 pub async fn create_assignment(
     subject_id: String,
@@ -111,7 +110,7 @@ pub async fn create_assignment(
 }
 
 // 10. DELETE /subjects/<subject_id>/assignments/<assignment_id>
-#[openapi(tag = "Assignment")]
+#[openapi(tag = "Assignments")]
 #[delete("/subjects/<subject_id>/assignments/<assignment_id>")]
 pub async fn delete_assignment(
     subject_id: String,
@@ -138,7 +137,7 @@ pub async fn delete_assignment(
 }
 
 // 11. GET /users/<user_id>/assignments/<assignment_id>/solution
-#[openapi(tag = "Solution")]
+#[openapi(tag = "Solutions")]
 #[get("/users/<user_id>/assignments/<assignment_id>/solution")]
 pub async fn get_user_solution(
     user_id: String,
@@ -172,7 +171,7 @@ pub struct UpdateSolutionRequest {
     pub review_comment: String,
 }
 
-#[openapi(tag = "Solution")]
+#[openapi(tag = "Solutions")]
 #[put("/users/<user_id>/assignments/<assignment_id>/solution", format = "json", data = "<body>")]
 pub async fn update_user_solution(
     user_id: String,
@@ -208,7 +207,7 @@ pub async fn update_user_solution(
     Ok(Response::Ok(()))
 }
 
-#[openapi(tag = "Subject")]
+#[openapi(tag = "Subjects")]
 #[get("/subjects/<subject_id>/assignments")]
 pub async fn get_subject_assignment(
     subject_id: String,
