@@ -65,8 +65,8 @@ pub struct Solution {
     pub reviewed_by: Option<String>,
     #[serde(skip_deserializing)]
     pub review_comment: Option<String>,
-    pub student_comment: Option<String>,
-    pub exercise_date: Option<NaiveDateTime>,
+    pub student_comment: String,
+    pub exercise_date: NaiveDateTime,
     #[serde(skip_deserializing)]
     pub review_date: Option<NaiveDateTime>,
     pub mime_type: String,

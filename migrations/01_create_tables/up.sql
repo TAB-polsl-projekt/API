@@ -10,7 +10,7 @@ CREATE TABLE subjects (
   subject_id TEXT NOT NULL PRIMARY KEY,
   subject_name TEXT NOT NULL,
   editor_role_id TEXT,
-  FOREIGN KEY (editor_role_id) REFERENCES roles(role_id) ON DELETE SET NULL
+  FOREIGN KEY (editor_role_id) REFERENCES roles(role_id) ON DELETE SET NULL -- ON DELETE CASCADE -- Tu moze ON DELETE SET NULL?
 );
 
 CREATE TABLE roles (
@@ -50,8 +50,8 @@ CREATE TABLE solutions (
   solution_data BLOB NOT NULL,
   reviewed_by TEXT,
   review_comment TEXT,
-  student_comment TEXT,
-  exercise_date TIMESTAMP,
+  student_comment TEXT NOT NULL,
+  exercise_date TIMESTAMP NOT NULL,
   review_date TIMESTAMP,
   mime_type TEXT NOT NULL,
   assignment_id TEXT NOT NULL,
