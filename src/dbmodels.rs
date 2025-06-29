@@ -22,7 +22,8 @@ pub struct Assignment {
     pub accepted_mime_types: String,
 }
 
-#[derive(Debug, JsonSchema, Serialize, Deserialize, Queryable, Insertable, Identifiable)]
+#[derive(Debug, JsonSchema, Serialize, Deserialize, Queryable, Insertable, Identifiable, Associations)]
+#[diesel(belongs_to(User))]
 #[diesel(primary_key(login_id))]
 #[diesel(table_name = logins)]
 pub struct Login {
