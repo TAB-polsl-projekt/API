@@ -8,7 +8,7 @@ use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, s
 use crate::define_api_response;
 use crate::session::Session;
 
-use crate::dbmodels::{Assignment, Role, Solution, Subject, SubjectRole, User, UserRole, UserSolution};
+use crate::dbmodels::{Solution, User, UserRole, UserSolution};
 use crate::schema::{assignments, roles, solutions, subject_role, subjects, user_role, user_solution, users};
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, OpenApi) {
@@ -20,8 +20,8 @@ define_api_response!(pub enum Response {
 });
 
 define_api_response!(pub enum Error {
-    Unauthorized => (401, "User does not have access to the assignment", (), ()),
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    Forbidden => (403, "User does not belong to the subject", (), ()),
+    InternalServerError => (500, "Unexpected server error", (), (diesel::result::Error)),
 });
 
 #[openapi(tag = "Assignments", operation_id = "postAssignmetSolution")]
@@ -30,28 +30,25 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
     let mut sln = sln.0;
     let user_id = session.user_id;
 
-    let result = conn.run(move |c| {
+    conn.run(move |c| -> Result<_, Error> {
 
         let user: User = users::table.find(user_id.clone()).first(c)?;
 
-        let roles: Vec<Role> = UserRole::belonging_to(&user)
+        let role_ids: Vec<String> = UserRole::belonging_to(&user)
             .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
-            .select(roles::all_columns)
+            .select(roles::role_id)
             .load(c)?;
+        
+        let user_has_access_to_subject: bool = diesel::select(exists(
+            subjects::table
+                .inner_join(subject_role::table.on(subject_role::subject_id.eq(subjects::subject_id)))
+                .inner_join(assignments::table.on(assignments::subject_id.eq(subjects::subject_id)))
+                .filter(subject_role::role_id.eq_any(&role_ids))
+                .filter(assignments::assignment_id.eq(&assignment_id))
+        )).get_result(c)?;
 
-        let subject: Subject = SubjectRole::belonging_to(&roles)
-            .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
-            .select(subjects::all_columns)
-            .first(c)?;
-
-        let assignment_query = Assignment::belonging_to(&subject)
-            .filter(assignments::assignment_id.eq(assignment_id.clone()));
-
-        let user_has_access_to_assignments: bool = diesel::select(exists(assignment_query))
-            .get_result(c)?;
-
-        if !user_has_access_to_assignments {
-            return Err(Error::Unauthorized(()));
+        if !user_has_access_to_subject {
+            return Err(Error::Forbidden(()));
         }
 
         let solution_id = Uuid::new_v4().to_string();
@@ -72,5 +69,5 @@ pub async fn endpoint(assignment_id: String, sln: Json<Solution>, conn: crate::d
     })
     .await?;
 
-    Ok(Response::Ok(result))
+    Ok(Response::Ok(()))
 }
