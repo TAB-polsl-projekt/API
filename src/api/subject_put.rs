@@ -22,12 +22,6 @@ define_api_response!(enum PutSubjectError {
     InternalServerError => (500, "Unexpected server error", (), (diesel::result::Error))
 });
 
-#[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
-struct Response {
-    subject_name: String,
-    assignments: Vec<Assignment>,
-}
-
 #[derive(Deserialize, JsonSchema, AsChangeset)]
 #[diesel(table_name = subjects)]
 struct SubjectUpdate {
