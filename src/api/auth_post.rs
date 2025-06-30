@@ -1,6 +1,6 @@
 use chrono::DateTime;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-use rocket::{post, serde::json::Json};
+use rocket::{http::{private::cookie::CookieBuilder, CookieJar}, post, serde::json::Json, time::{Duration, OffsetDateTime}};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,6 @@ define_api_response!(pub enum Error {
 
 define_response_data!(
     pub struct ResponseData {
-        pub session_id: String,
         pub is_admin: bool
     }
 );
@@ -36,7 +35,7 @@ pub struct LoginData {
 /// Test
 #[openapi(tag = "Auth", operation_id = "postAuth")]
 #[post("/auth", data = "<login_data>")]
-pub async fn endpoint(login_data: Json<LoginData>, conn: crate::db::DbConn) -> Result<Response, Error> {
+pub async fn endpoint(login_data: Json<LoginData>, conn: crate::db::DbConn, cookie_jar: &CookieJar<'_>) -> Result<Response, Error> {
     let login_data = login_data.0;
     let email = login_data.email;
     let hased_password = login_data.password_hash;
@@ -69,5 +68,12 @@ pub async fn endpoint(login_data: Json<LoginData>, conn: crate::db::DbConn) -> R
         Ok((refresh_key_id, is_admin))
     }).await?;
 
-    Ok(Response::Ok(ResponseData { session_id, is_admin }))
+    let expires = OffsetDateTime::now_utc() + Duration::days(365);
+    let session_cookie = CookieBuilder::new("session_id", session_id)
+        .expires(expires)
+        .secure(true)
+        .build();
+
+    cookie_jar.add(session_cookie);
+    Ok(Response::Ok(ResponseData { is_admin }))
 }

@@ -3,10 +3,9 @@ use rocket::{put, serde::json::Json};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::admin_session::AdminSession;
-use crate::dbmodels::{Assignment};
 use crate::define_api_response;
 use crate::schema::subjects;
 

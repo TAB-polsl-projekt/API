@@ -5,7 +5,6 @@ edition = "2024"
 default-run = "backend"
 
 [dependencies]
-actix-web = "4"
 anyhow = "1.0.98"
 chrono = { version = "0.4.40", features = ["serde"] }
 diesel = { version = "2.2.10", features = ["chrono", "r2d2", "serde_json", "sqlite", "uuid"] }
@@ -15,7 +14,6 @@ enum-assoc = "1.2.4"
 jsonwebtoken = "9"
 okapi = { version = "0.7.0", features = ["impl_json_schema"] }
 paste = "1.0.15"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 rocket = { version = "0.5.1", features = ["json"] }
 rocket_cors = "0.6.0"
 rocket_okapi = { version = "0.9.0", features = ["swagger", "uuid", "rocket_sync_db_pools", "rapidoc", "rocket_db_pools", "rocket_dyn_templates"] }

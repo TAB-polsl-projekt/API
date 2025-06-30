@@ -1,5 +1,6 @@
 use diesel::{ExpressionMethods, RunQueryDsl};
 use rocket::delete;
+use rocket::http::CookieJar;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::schema::{session_ids};
@@ -21,7 +22,7 @@ define_api_response!(pub enum Error {
 /// Test
 #[openapi(tag = "Auth", operation_id = "deleteAuth")]
 #[delete("/auth")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
+pub async fn endpoint(conn: crate::db::DbConn, session: Session, cookie_jar: &CookieJar<'_>) -> Result<Response, Error> {
     let session_id = session.session_id;
 
     let _result = conn.run(move |c| {
@@ -30,5 +31,10 @@ pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Respo
             .execute(c)
     }).await?;
 
+    let session_cookie = cookie_jar.get("session_id");
+    if let Some(cookie) = session_cookie {
+        cookie_jar.remove(cookie.clone());
+    }
+    
     Ok(Response::Ok(()))
 }
