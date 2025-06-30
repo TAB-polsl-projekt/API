@@ -2,3 +2,7 @@
 address = "0.0.0.0"
 [default.databases]
 sqlite_db = { url = "db.sqlite" }
+
+[global.limits]
+data-form = "15 MiB"
+file = "10 MiB"

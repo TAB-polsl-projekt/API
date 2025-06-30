@@ -61,6 +61,7 @@ pub struct Solution {
     pub grade: Option<f64>,
     #[serde(skip_deserializing)]
     pub submission_date: NaiveDateTime,
+    #[serde(skip_deserializing)]
     pub solution_data: Vec<u8>,
     #[serde(skip_deserializing)]
     pub reviewed_by: Option<String>,
