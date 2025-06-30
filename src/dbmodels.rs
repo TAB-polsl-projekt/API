@@ -55,6 +55,7 @@ pub struct SessionId {
 #[diesel(primary_key(solution_id))]
 #[diesel(table_name = solutions)]
 pub struct Solution {
+    #[serde(skip_deserializing)]
     pub solution_id: String,
     #[serde(skip_deserializing)]
     pub grade: Option<f64>,
