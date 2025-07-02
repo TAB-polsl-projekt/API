@@ -1,38 +1,40 @@
 use rocket::Route;
 use rocket_okapi::{okapi::{merge::marge_spec_list, openapi3::OpenApi}, settings::OpenApiSettings};
 
-pub mod account_get;
-pub mod account_put;
-pub mod assignment_get;
-pub mod assignment_put;
-pub mod assignment_solution_get;
-pub mod assignment_solution_post;
-pub mod assignments_post;
-pub mod auth_delete;
-pub mod auth_post;
-pub mod subject_get;
-pub mod subject_put;
-pub mod subjects_get;
-pub mod subjects_post;
-pub mod users_get;
-pub mod assignments_get;
-pub mod get_solutions;
-pub mod subjects_delete;
-pub mod assignment_delete;
-pub mod subject_role_post;
-pub mod subject_role_delete;
-pub mod subject_student_assignments_get;
-pub mod subject_solutions_get;
-pub mod enrolled;
-pub mod idk;
-pub mod user_roles_get;
-pub mod user_role_post;
-pub mod user_role_delete;
-pub mod subject_roles_get;
-pub mod account_post;
-pub mod roles;
-pub mod users;
-pub mod subject_teachers_get;
+mod account_get;
+mod account_put;
+mod assignment_get;
+mod assignment_put;
+mod assignment_solution_get;
+mod assignment_solution_post;
+mod assignments_post;
+mod auth_delete;
+mod auth_post;
+mod subject_get;
+mod subject_put;
+mod subjects_get;
+mod subjects_post;
+mod users_get;
+mod assignments_get;
+mod get_solutions;
+mod subjects_delete;
+mod assignment_delete;
+mod subject_role_post;
+mod subject_role_delete;
+mod subject_student_assignments_get;
+mod subject_solutions_get;
+mod enrolled;
+mod idk;
+mod user_roles_get;
+mod user_role_post;
+mod user_role_delete;
+mod subject_roles_get;
+mod account_post;
+mod roles;
+mod users;
+mod subject_teachers_get;
+mod assignment_attendance_get;
+mod assignment_attendance_post;
 
 pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) {
     // Start with an empty vector for routes and an initial empty OpenAPI object.
@@ -71,6 +73,8 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<Route>, OpenApi) 
     all_routes_and_docs.push(roles::get_routes_and_docs(settings));
     all_routes_and_docs.push(users::get_routes_and_docs(settings));
     all_routes_and_docs.push(subject_teachers_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignment_attendance_get::get_routes_and_docs(settings));
+    all_routes_and_docs.push(assignment_attendance_post::get_routes_and_docs(settings));
 
     let (mut all_routes, all_spec) = all_routes_and_docs.into_iter()
         .fold((Vec::new(), Vec::new()), |(mut routes, mut specs), it| {
