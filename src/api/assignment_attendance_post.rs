@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use rocket::post;
+use rocket::serde::json::Json;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
 use crate::admin_session::AdminSession;
@@ -23,7 +24,7 @@ define_response_data!(struct AttendanceData {
 });
 
 #[openapi(tag = "Assignments", operation_id = "postAssignmentAttendance")]
-#[post("/assignments/{_assignment_id}/attendance", data = "<_attendance_data>")]
-async fn post_assignment_attendance(_assignment_id: String, _attendance_data: AttendanceData, _conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
+#[post("/assignments/<_assignment_id>/attendance", data = "<_attendance_data>")]
+async fn post_assignment_attendance(_assignment_id: String, _attendance_data: Json<AttendanceData>, _conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
     todo!();
 }
