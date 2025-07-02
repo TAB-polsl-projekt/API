@@ -17,6 +17,7 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 
 #[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
 struct AllAssignmentData {
+    #[serde(flatten)]
     assignment_data: Assignment,
     attendance: bool
 }
@@ -24,7 +25,7 @@ struct AllAssignmentData {
 #[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
 struct ResponseData {
     subject_name: String,
-    assignments_data: Vec<AllAssignmentData>,
+    assignments: Vec<AllAssignmentData>,
 }
 
 define_api_response!(enum Response {
@@ -60,7 +61,7 @@ async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session)
             let subject_name = subject.subject_name;
 
             let mut rng = rand::rng();
-            let assignments_data = assignments.into_iter()
+            let assignments = assignments.into_iter()
                 .map(|assignment| {
                     AllAssignmentData {
                         assignment_data: assignment,
@@ -71,7 +72,7 @@ async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session)
 
             ResponseData {
                 subject_name,
-                assignments_data
+                assignments
             }
         };
 
