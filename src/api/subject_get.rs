@@ -1,4 +1,5 @@
 use diesel::{BelongingToDsl, ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use rand::Rng;
 use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
@@ -15,22 +16,28 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 #[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
-pub struct ResponseData {
-    subject_name: String,
-    assignments: Vec<Assignment>,
+struct AllAssignmentData {
+    assignment_data: Assignment,
+    attendance: bool
 }
 
-define_api_response!(pub enum Response {
-    Ok => (200, "", ResponseData, ())
+#[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
+struct ResponseData {
+    subject_name: String,
+    assignments_data: Vec<AllAssignmentData>,
+}
+
+define_api_response!(enum Response {
+    Ok => (200, "Ok", ResponseData, ())
 });
 
-define_api_response!(pub enum Error {
-    InternalServerError => (500, "", (), (diesel::result::Error))
+define_api_response!(enum Error {
+    InternalServerError => (500, "Unexpected server error", (), (diesel::result::Error))
 });
 
 #[openapi(tag = "Subjects", operation_id = "getSubject")]
 #[get("/subjects/<subject_id>")]
-pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
+async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
 
     conn.run(move |c| {
@@ -52,9 +59,19 @@ pub async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Sess
             let assignments = Assignment::belonging_to(&subject).load(c)?;
             let subject_name = subject.subject_name;
 
+            let mut rng = rand::rng();
+            let assignments_data = assignments.into_iter()
+                .map(|assignment| {
+                    AllAssignmentData {
+                        assignment_data: assignment,
+                        attendance: rng.random()
+                    }
+                })
+                .collect();
+
             ResponseData {
                 subject_name,
-                assignments
+                assignments_data
             }
         };
 

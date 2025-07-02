@@ -8,7 +8,7 @@ use rocket::tokio::io::AsyncReadExt;
 use rocket::{post, routes};
 use rocket::form::FromForm;
 use rocket::serde::uuid::Uuid;
-use crate::define_api_response;
+use crate::{define_api_response};
 use crate::session::Session;
 
 use crate::dbmodels::{Solution, UserSolution};
