@@ -1,4 +1,3 @@
-use rand::Rng;
 use rocket::{get, FromForm};
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
@@ -29,11 +28,5 @@ define_response_data!(
 #[openapi(tag = "Assignments", operation_id = "getAssignmentAttendance")]
 #[get("/assignments/<_assignment_id>/attendance?<_query..>")]
 async fn endpoint(_query: Query, _assignment_id: String, conn: crate::db::DbConn, _session: AdminSession) -> Result<Response, Error> {
-    let attendance = conn.run(move |c| {
-        let mut rng = rand::rng();
-
-        rng.random()
-    }).await;
-
-    Ok(Response::Ok(attendance))
+    todo!()
 }

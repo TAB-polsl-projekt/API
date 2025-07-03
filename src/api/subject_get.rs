@@ -1,5 +1,4 @@
 use diesel::{BelongingToDsl, ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
-use rand::Rng;
 use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 use rocket_okapi::okapi::schemars;
@@ -25,6 +24,7 @@ struct AllAssignmentData {
 #[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
 struct ResponseData {
     subject_name: String,
+    editor_role_id: Option<String>,
     assignments: Vec<AllAssignmentData>,
 }
 
@@ -59,19 +59,20 @@ async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session)
 
             let assignments = Assignment::belonging_to(&subject).load(c)?;
             let subject_name = subject.subject_name;
+            let editor_role_id = subject.editor_role_id;
 
-            let mut rng = rand::rng();
             let assignments = assignments.into_iter()
                 .map(|assignment| {
                     AllAssignmentData {
                         assignment_data: assignment,
-                        attendance: rng.random()
+                        attendance: true
                     }
                 })
                 .collect();
 
             ResponseData {
                 subject_name,
+                editor_role_id,
                 assignments
             }
         };
