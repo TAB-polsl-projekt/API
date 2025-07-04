@@ -40,22 +40,29 @@ define_api_response!(enum Error {
 #[get("/subjects/<subject_id>")]
 async fn endpoint(subject_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
+    let is_admin = session.is_admin;
 
     conn.run(move |c| {
 
         let result = {
-            let user: User = users::table.find(user_id).first(c)?;
+            let subject = if is_admin {
+                subjects::table.find(subject_id).first(c)?
+            } else {
+                let user: User = users::table.find(user_id).first(c)?;
 
-            let roles: Vec<Role> = UserRole::belonging_to(&user)
-                .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
-                .select(roles::all_columns)
-                .load(c)?;
+                let roles: Vec<Role> = UserRole::belonging_to(&user)
+                    .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
+                    .select(roles::all_columns)
+                    .load(c)?;
 
-            let subject: Subject = SubjectRole::belonging_to(&roles)
-                .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
-                .filter(subjects::subject_id.eq(subject_id))
-                .select(subjects::all_columns)
-                .first(c)?;
+                let subject: Subject = SubjectRole::belonging_to(&roles)
+                    .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
+                    .filter(subjects::subject_id.eq(subject_id))
+                    .select(subjects::all_columns)
+                    .first(c)?;
+
+                subject
+            };
 
             let assignments = Assignment::belonging_to(&subject).load(c)?;
             let subject_name = subject.subject_name;
