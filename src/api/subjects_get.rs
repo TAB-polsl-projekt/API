@@ -14,65 +14,67 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 #[derive(Debug, schemars::JsonSchema, Serialize, Deserialize)]
-pub struct ResponseData {
+struct ResponseData {
     subject_id: String,
     subject_name: String,
 }
 
-define_api_response!(pub enum Response {
+define_api_response!(enum Response {
     Ok => (200, "", Vec<ResponseData>, ())
 });
 
-define_api_response!(pub enum Error {
+define_api_response!(enum Error {
+    NotFound => (404, "Subjects not found", (), ()),
     InternalServerError => (500, "", (), (diesel::result::Error))
 });
 
 #[openapi(tag = "Subjects", operation_id = "getSubjects")]
 #[get("/subjects")]
-pub async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
+async fn endpoint(conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
     let is_admin = session.is_admin;
 
-    conn.run(move |c| -> Result<_, Error> {
+    let subjects: Vec<Subject> = conn.run(move |c| -> Result<_, Error> {
+        if is_admin {
+            return Ok(subjects::table.load(c)?);
+        }
 
-        let subjects: Vec<Subject> = {
-            if !is_admin {
-                let user: User = users::table.find(user_id).first(c)?;
+        let user: User = users::table.find(user_id).first(c)?;
 
-                let roles: Vec<Role> = UserRole::belonging_to(&user)
-                    .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
-                    .select(roles::all_columns)
-                    .load(c)?;
+        let roles: Vec<Role> = UserRole::belonging_to(&user)
+            .inner_join(roles::table.on(roles::role_id.eq(user_role::role_id)))
+            .select(roles::all_columns)
+            .load(c)?;
 
-                let subjects = SubjectRole::belonging_to(&roles)
-                    .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
-                    .select(subjects::all_columns)
-                    .load(c)?;
+        let subjects = SubjectRole::belonging_to(&roles)
+            .inner_join(subjects::table.on(subjects::subject_id.eq(subject_role::subject_id)))
+            .select(subjects::all_columns)
+            .load(c)?;
 
-                subjects
-            } else {
-                subjects::table.load(c)?
-            }
-        };
+        Ok(subjects)
+    }).await?;
 
-        let responses = subjects
-            .iter()
-            .map(|x| {
-                    let subject_id = x.subject_id.clone();
-                    let subject_name = x.subject_name.clone();
+    if !is_admin && subjects.is_empty() {
+        return Err(Error::NotFound(()));
+    }
 
-                    ResponseData {
-                        subject_id,
-                        subject_name
-                    }
-                }   
-            )
-            .collect();
+    let responses = subjects
+        .iter()
+        .map(|x| {
+                let subject_id = x.subject_id.clone();
+                let subject_name = x.subject_name.clone();
 
-        Ok(
-            Response::Ok(
-                responses
-            )
+                ResponseData {
+                    subject_id,
+                    subject_name
+                }
+            }   
         )
-    }).await
+        .collect();
+
+    Ok(
+        Response::Ok(
+            responses
+        )
+    )
 }
