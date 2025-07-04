@@ -1,4 +1,4 @@
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, JoinOnDsl, OptionalExtension, QueryDsl, RunQueryDsl};
 use rocket::get;
 use rocket_okapi::{okapi::openapi3::OpenApi, openapi, openapi_get_routes_spec, settings::OpenApiSettings};
 
@@ -12,11 +12,12 @@ pub fn get_routes_and_docs(settings: &OpenApiSettings) -> (Vec<rocket::Route>, O
 }
 
 define_api_response!(pub enum Response {
-    Ok => (200, "TEST", Solution, ()),
+    Ok => (200, "Ok", Solution, ()),
 });
 
 define_api_response!(pub enum Error {
-    InternalServerError => (500, "TEST", String, (diesel::result::Error)),
+    NotFound => (404, "Solution not found", (), ()),
+    InternalServerError => (500, "Unexpected server error", (), (diesel::result::Error)),
 });
 
 #[openapi(tag = "Assignments", operation_id = "getAssignmentSolution")]
@@ -32,7 +33,12 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
             .order(solutions::submission_date.desc())
             .select(solutions::all_columns)
             .first(c)
+            .optional()
     }).await?;
+
+    let Some(result) = result else {
+        return Err(Error::NotFound(()));
+    };
 
     Ok(Response::Ok(result))
 }
