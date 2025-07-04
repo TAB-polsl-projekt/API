@@ -25,7 +25,7 @@ define_api_response!(pub enum Error {
 pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: Session) -> Result<Response, Error> {
     let user_id = session.user_id;
 
-    let result = conn.run(move |c| {
+    let result: Option<Solution> = conn.run(move |c| {
         solutions::table
             .inner_join(user_solution::table.on(user_solution::solution_id.eq(solutions::solution_id)))
             .filter(solutions::assignment_id.eq(assignment_id))
@@ -36,9 +36,11 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
             .optional()
     }).await?;
 
-    let Some(result) = result else {
+    let Some(mut result) = result else {
         return Err(Error::NotFound(()));
     };
+
+    result.solution_data.clear();
 
     Ok(Response::Ok(result))
 }
