@@ -157,6 +157,7 @@ pub async fn get_user_solution(
                 .select(solutions::all_columns)
                 .filter(user_solution::user_id.eq(user_id.clone()))
                 .filter(solutions::assignment_id.eq(assignment_id.clone()))
+                .order(solutions::submission_date.desc())
                 .first(c)
                 .optional()
         })

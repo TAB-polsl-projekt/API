@@ -29,6 +29,7 @@ pub async fn endpoint(assignment_id: String, conn: crate::db::DbConn, session: S
             .inner_join(user_solution::table.on(user_solution::solution_id.eq(solutions::solution_id)))
             .filter(solutions::assignment_id.eq(assignment_id))
             .filter(user_solution::user_id.eq(user_id))
+            .order(solutions::submission_date.desc())
             .select(solutions::all_columns)
             .first(c)
     }).await?;
